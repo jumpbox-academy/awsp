@@ -24,12 +24,17 @@ mod tests {
 }
 
 use awsp::{ default_config_location, parse_config_file };
+use nix::libc::getpid;
 use std::convert::TryInto;
+use std::path::PathBuf;
 use std::{error::Error, env};
-
+use std::os::unix::process::CommandExt;
+use std::process::Command;
+use nix::unistd::getppid;
 use crate::cmdline::Opt;
-
+use sysinfo::get_current_pid;
 use dialoguer::{theme::ColorfulTheme, Select};
+use sysinfo::{System, SystemExt, ProcessExt};
 
 const REGIONS: &'static [&str] = &[
     "us-east-2      | Ohio",
@@ -81,10 +86,21 @@ pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
     let selection = display(display_prompt, REGIONS, 0);
     dbg!(REGIONS[selection]);
     select_region(REGIONS[selection]);
+
+    // let shell =  env::var("SHELL").unwrap();
+    Command::new(find_shell().expect("cannot find shell path")).exec();
     
     Ok(())
 }
-
+fn find_shell()-> Option<PathBuf> {
+    let current_pid = get_current_pid().ok()?;
+    let s = System::new_all();
+    let current_process = s.process(current_pid)?;
+    let parent_pid = current_process.parent()?;
+    let parent_process = s.process(parent_pid)?;
+    let shell_path = parent_process.exe();
+    Some(shell_path.to_path_buf())
+}
 fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> usize {
     Select::with_theme(&ColorfulTheme::default())
             .with_prompt(display_prompt)
@@ -97,13 +113,11 @@ fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> u
 
 fn select_profile(profile: &str){
     dbg!(profile);
-    env::remove_var("AWS_PROFILE");
     env::set_var("AWS_PROFILE", profile);
+    dbg!(env::var("AWS_PROFILE").unwrap());
 }
 
 fn select_region(region: &str) {
     dbg!(region);
-    env::remove_var("AWS_DEFAULT_REGION");
     env::set_var("AWS_DEFAULT_REGION", region);
 }
-
