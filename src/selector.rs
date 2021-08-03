@@ -24,13 +24,10 @@ mod tests {
 }
 
 use awsp::{ default_config_location, parse_config_file };
-use nix::libc::getpid;
 use std::convert::TryInto;
 use std::path::PathBuf;
 use std::{error::Error, env};
-use std::os::unix::process::CommandExt;
 use std::process::Command;
-use nix::unistd::getppid;
 use crate::cmdline::Opt;
 use sysinfo::get_current_pid;
 use dialoguer::{theme::ColorfulTheme, Select};
@@ -86,10 +83,11 @@ pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
     let selection = display(display_prompt, REGIONS, 0);
     dbg!(REGIONS[selection]);
     select_region(REGIONS[selection]);
-
+    let path = find_shell().expect("cannot find shell path");
+    dbg!(&path);
     // let shell =  env::var("SHELL").unwrap();
-    Command::new(find_shell().expect("cannot find shell path")).exec();
-    
+    let mut child = Command::new(path).spawn().unwrap();
+    child.wait().unwrap();
     Ok(())
 }
 fn find_shell()-> Option<PathBuf> {
