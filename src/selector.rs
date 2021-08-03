@@ -23,12 +23,12 @@ mod tests {
 
 }
 
+use awsp::{ default_config_location, parse_config_file };
 use std::convert::TryInto;
-use std::{error::Error, path::Path, env};
+use std::{error::Error, env};
 
 use crate::cmdline::Opt;
 
-use awsp::parse_config_file;
 use dialoguer::{theme::ColorfulTheme, Select};
 
 const REGIONS: &'static [&str] = &[
@@ -55,7 +55,8 @@ const REGIONS: &'static [&str] = &[
 
 pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 
-    let config_file = parse_config_file(Path::new("config")).unwrap();
+    let location = default_config_location().unwrap();
+    let config_file = parse_config_file(location.as_path()).unwrap();
     
     let mut profile_list = vec![];
         
@@ -69,15 +70,12 @@ pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
     dbg!("kai: {}",&profile_list);
 
     if !opt.region {
-        dbg!("test");
-        select_profile("profile");
         let default_region = env::var("AWS_PROFILE").unwrap();
-        let display_prompt = format!("region (current: {} )", default_region);
+        let display_prompt = format!("profile (current: {} )", default_region);
         let selection = display(display_prompt, profile_list, 0);    
         dbg!(profile_list[selection]);
         select_profile(profile_list[selection]);
     }
-    select_region("ped");
     let default_profile = env::var("AWS_DEFAULT_REGION").unwrap();
     let display_prompt = format!("region (current: {} )", default_profile);
     let selection = display(display_prompt, REGIONS, 0);
@@ -90,7 +88,7 @@ pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> usize {
     Select::with_theme(&ColorfulTheme::default())
             .with_prompt(display_prompt)
-            .default(0)
+            .default(default)
             .items(list)
             .paged(true)
             .interact()
@@ -98,10 +96,14 @@ fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> u
 }
 
 fn select_profile(profile: &str){
+    dbg!(profile);
+    env::remove_var("AWS_PROFILE");
     env::set_var("AWS_PROFILE", profile);
 }
 
 fn select_region(region: &str) {
+    dbg!(region);
+    env::remove_var("AWS_DEFAULT_REGION");
     env::set_var("AWS_DEFAULT_REGION", region);
 }
 

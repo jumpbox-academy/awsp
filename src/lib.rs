@@ -129,7 +129,7 @@
 use dirs::home_dir;
 use regex::Regex;
 use rusoto_credential::{ AwsCredentials, CredentialsError };
-use std::{collections::HashMap, fs::{self, File}, io::{BufRead, BufReader}, path::{Path, PathBuf}};
+use std::{collections::HashMap, env::var, fs::{self, File}, io::{BufRead, BufReader}, path::{Path, PathBuf}};
 
 
 const AWS_CONFIG_FILE: &str = "AWS_CONFIG_FILE";
@@ -139,6 +139,40 @@ const DEFAULT: &str = "default";
 const REGION: &str = "region";
 const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
 
+
+fn non_empty_env_var(name: &str) -> Option<String> {
+    match var(name) {
+        Ok(value) => {
+            if value.is_empty() {
+                None
+            } else {
+                Some(value)
+            }
+        }
+        Err(_) => None,
+    }
+}
+
+/// Default config file location:
+/// 1: if set and not empty, use the value from environment variable ```AWS_CONFIG_FILE```
+/// 2. otherwise return `~/.aws/config` (Linux/Mac) resp. `%USERPROFILE%\.aws\config` (Windows)
+pub fn default_config_location() -> Result<PathBuf, CredentialsError> {
+    let env = non_empty_env_var(AWS_CONFIG_FILE);
+    match env {
+        Some(path) => Ok(PathBuf::from(path)),
+        None => hardcoded_config_location(),
+    }
+}
+fn hardcoded_config_location() -> Result<PathBuf, CredentialsError> {
+    match home_dir() {
+        Some(mut home_path) => {
+            home_path.push(".aws");
+            home_path.push("config");
+            Ok(home_path)
+        }
+        None => Err(CredentialsError::new("Failed to determine home directory.")),
+    }
+}
 
 fn new_profile_regex() -> Regex {
     Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
