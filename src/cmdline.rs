@@ -3,7 +3,7 @@ use structopt::StructOpt;
 #[derive(Debug, StructOpt)]
 #[structopt(name = "aws ops", about = "AWS Configure Profile")]
 pub struct Opt {
-    #[structopt(short = "r", long = "region")]
+    #[structopt(short = "r", long = "region")]  
     pub region: bool
 }
 
