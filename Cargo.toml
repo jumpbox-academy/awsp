@@ -13,3 +13,6 @@ rusoto_credential = "0.47.0"
 setenv = "0.1.2"
 structopt = "0.3.22"
 sysinfo = "0.19.2"
+
+[target.'cfg(unix)'.dependencies]
+nix = "0.22.0"

@@ -24,14 +24,18 @@ mod tests {
 }
 
 use awsp::{ default_config_location, parse_config_file };
+
 use std::convert::TryInto;
 use std::path::PathBuf;
 use std::{error::Error, env};
-use std::process::Command;
+use std::process::{self, Command};
 use crate::cmdline::Opt;
 use sysinfo::get_current_pid;
 use dialoguer::{theme::ColorfulTheme, Select};
-use sysinfo::{System, SystemExt, ProcessExt};
+use sysinfo::{System, SystemExt, Signal, ProcessExt};
+
+#[cfg(unix)]
+use std::os::unix::prelude::CommandExt;
 
 const REGIONS: &'static [&str] = &[
     "us-east-2      | Ohio",
@@ -83,11 +87,45 @@ pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
     let selection = display(display_prompt, REGIONS, 0);
     dbg!(REGIONS[selection]);
     select_region(REGIONS[selection]);
-    let path = find_shell().expect("cannot find shell path");
-    dbg!(&path);
+
     // let shell =  env::var("SHELL").unwrap();
-    let mut child = Command::new(path).spawn().unwrap();
-    child.wait().unwrap();
+
+    let current_pid = get_current_pid().ok().unwrap();
+    let s = System::new_all();
+    let current_process = s.process(current_pid).unwrap();
+    let parent_pid = current_process.parent().unwrap();
+    let parent_process = s.process(parent_pid).unwrap();
+    let shell_path = parent_process.exe();
+    if cfg!(window) {
+        let mut child = Command::new(shell_path).spawn().unwrap();
+        child.wait().expect("wait msg");
+        // child.kill().expect("kill msg");
+        dbg!(parent_pid);
+        dbg!(current_pid);
+        s.process(parent_pid).unwrap().kill(Signal::Kill);
+    } else {
+        dbg!("kai");
+        dbg!(parent_pid);
+        dbg!(current_pid);
+        Command::new(shell_path).exec();
+        s.process(parent_pid).unwrap().kill(Signal::Kill);
+    }
+
+    dbg!("kai");
+
+    
+    // let path = find_shell().expect("cannot find shell path");
+    // dbg!(&path);
+
+    // use function
+    // let mut child = Command::new(path).spawn().unwrap();
+
+    // let current_pid = get_current_pid().ok().unwrap();
+    // let s = System::new_all();
+    // let current_process = s.process(current_pid).unwrap();
+    // current_process.kill(Signal::Kill);
+
+
     Ok(())
 }
 fn find_shell()-> Option<PathBuf> {
