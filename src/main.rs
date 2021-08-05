@@ -1,21 +1,17 @@
 use cmdline::Opt;
-use std::{ process };
 
-pub mod config;
 pub mod cmdline;
+pub mod config;
 mod selector;
 
 fn main() {
-
-    // let args: Vec<String> = env::args().collect();
-    // let config = Config::new(&args);
-
     let opt = Opt::parse();
-    dbg!(&opt);
-    // println!("{:?}", opt);
+    // dbg!(opt);
+    selector::run(&opt);
+    // TODO handle error
+    // if let Err(e) = selector::run(&opt) {
+    //     eprintln!("App error: {}", e);
+    //     process::exit(1);
+    // }
 
-    if let Err(e) = selector::run(&opt) {
-        eprintln!("App error:");
-        process::exit(1);
-    }
 }

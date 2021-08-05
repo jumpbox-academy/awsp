@@ -1,4 +1,3 @@
-
 //yaml
 // https://github.com/dtolnay/serde-yaml
 
@@ -9,13 +8,12 @@
 // https://github.com/rusoto/rusoto
 // https://rusoto.github.io/rusoto/src/rusoto_credential/profile.rs.html#264
 
-
-// #[cfg(test)]
-// mod tests {
+#[cfg(test)]
+mod tests {
 
 //     // use rusoto_credential::{CredentialsError, ProvideAwsCredentials};
-//     #[test]
-//     fn parse_config_file_default_profile() {
+    #[test]
+    fn parse_config_file_default_profile() {
 //         let result = super::parse_config_file(Path::new("tests/sample-data/default_config"));
 //         assert!(result.is_some());
 //         let profiles = result.unwrap();
@@ -25,7 +23,7 @@
 //             .expect("No Default profile in default_profile_credentials");
 //         assert_eq!(default_profile.get(REGION), Some(&"us-east-2".to_string()));
 //         assert_eq!(default_profile.get("output"), Some(&"json".to_string()));
-//     }
+    }
 
 //     #[test]
 //     fn parse_config_file_multiple_profiles() {
@@ -122,23 +120,21 @@
 //         assert_eq!(default_profile.aws_secret_access_key(), "bar");
 //     }
 
+}
 
-// }
-
-// should probably constantize with lazy_static!
 use dirs::home_dir;
 use regex::Regex;
-use rusoto_credential::{ AwsCredentials, CredentialsError };
-use std::{collections::HashMap, env::var, fs::{self, File}, io::{BufRead, BufReader}, path::{Path, PathBuf}};
-
+use rusoto_credential::{AwsCredentials, CredentialsError};
+use std::fs::{self, File};
+use std::io::{BufRead, BufReader};
+use std::path::{Path, PathBuf};
+use std::{collections::HashMap, env::var};
 
 const AWS_CONFIG_FILE: &str = "AWS_CONFIG_FILE";
-const AWS_PROFILE: &str = "AWS_PROFILE";
-const AWS_SHARED_CREDENTIALS_FILE: &str = "AWS_SHARED_CREDENTIALS_FILE";
-const DEFAULT: &str = "default";
-const REGION: &str = "region";
-const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
-
+// const AWS_PROFILE: &str = "AWS_PROFILE";
+// const AWS_SHARED_CREDENTIALS_FILE: &str = "AWS_SHARED_CREDENTIALS_FILE";
+// const DEFAULT: &str = "default";
+// const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
 
 fn non_empty_env_var(name: &str) -> Option<String> {
     match var(name) {
@@ -163,6 +159,7 @@ pub fn default_config_location() -> Result<PathBuf, CredentialsError> {
         None => hardcoded_config_location(),
     }
 }
+
 fn hardcoded_config_location() -> Result<PathBuf, CredentialsError> {
     match home_dir() {
         Some(mut home_path) => {

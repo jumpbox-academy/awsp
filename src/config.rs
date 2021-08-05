@@ -13,7 +13,6 @@
 //     }
 // }
 
-
 // pub struct Config {
 //     pub command: String,
 //     pub config_path: PathBuf
@@ -26,21 +25,21 @@
 //         const AWS_CONFIG_PATH: &str = ".aws/config";
 //         let config  = Config {
 //             command: String::from(""),
-//             config_path: 
+//             config_path:
 //                 dirs::home_dir().unwrap().join(AWS_CONFIG_PATH),
 //         };
 
 //         if args.len() < 1 {
 //             return Ok(Config {
-//                 command: (String::from("")), 
+//                 command: (String::from("")),
 //                 config_path: None
 //              })
 //         }
-      
+
 //         Ok(Config {
-//                 command: (String::from("")), 
-//                 flag: (String::from("")) 
+//                 command: (String::from("")),
+//                 flag: (String::from(""))
 //         })
 //     }
-    
+
 // }
