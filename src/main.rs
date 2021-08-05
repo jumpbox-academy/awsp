@@ -6,12 +6,11 @@ mod selector;
 
 fn main() {
     let opt = Opt::parse();
+    selector::run(&opt)
     // dbg!(opt);
-    selector::run(&opt);
-    // TODO handle error
+    // TODO Error Handler
     // if let Err(e) = selector::run(&opt) {
     //     eprintln!("App error: {}", e);
     //     process::exit(1);
     // }
-
 }

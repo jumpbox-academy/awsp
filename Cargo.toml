@@ -1,6 +1,6 @@
 [package]
 name = "awsp"
-version = "0.1.0"
+version = "0.0.1-beta"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -10,12 +10,9 @@ dialoguer = "0.8.0"
 dirs = "3.0.2"
 regex = "1.5.4"
 rusoto_credential = "0.47.0"
-setenv = "0.1.2"
 structopt = "0.3.22"
 sysinfo = "0.19.2"
 
-[target.'cfg(unix)'.dependencies]
-nix = "0.22.0"
-
 [profile.release]
-opt-level = "s"
+opt-level = 'z'  # Optimize for size.
+lto = true

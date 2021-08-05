@@ -1,25 +1,10 @@
-//yaml
-// https://github.com/dtolnay/serde-yaml
-
-// rusoto doc
-// https://rusoto.github.io/rusoto/rusoto_credential/index.html
-
-// ref
-// https://github.com/rusoto/rusoto
-// https://rusoto.github.io/rusoto/src/rusoto_credential/profile.rs.html#264
-
 #[cfg(test)]
 mod tests {
 
-    // use std::env;
     use std::path::Path;
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";
-
-    // use super::*;
-    // use crate::test_utils::{lock, ENV_MUTEX};
-    // use crate::{CredentialsError, ProvideAwsCredentials};
 
     #[test]
     fn parse_config_file_default_profile() {
@@ -128,7 +113,6 @@ mod tests {
         assert_eq!(default_profile.aws_access_key_id(), "foo");
         assert_eq!(default_profile.aws_secret_access_key(), "bar");
     }
-
 }
 
 use dirs::home_dir;
@@ -140,10 +124,6 @@ use std::path::{Path, PathBuf};
 use std::{collections::HashMap, env::var};
 
 const AWS_CONFIG_FILE: &str = "AWS_CONFIG_FILE";
-// const AWS_PROFILE: &str = "AWS_PROFILE";
-// const AWS_SHARED_CREDENTIALS_FILE: &str = "AWS_SHARED_CREDENTIALS_FILE";
-
-// const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
 
 fn non_empty_env_var(name: &str) -> Option<String> {
     match var(name) {

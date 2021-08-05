@@ -3,7 +3,6 @@ mod tests {
 
     use super::*;
     use std::env;
-    use std::path::Path;
 
     #[test]
     fn select_profile_with_selection() {
@@ -21,30 +20,45 @@ mod tests {
         assert_eq!(expect, result);
     }
 
-    // #[test]
-    // fn string_eq() {
-    //     let parent = Path::new("target/debug/kaiped");
-    //     let current = Path::new("/usr/local/bin/awsp");
-    //     let parent = parent.to_str().unwrap();
-    //     let current = current.to_str().unwrap();
-    //     // dbg!(parent.ne(current));
-    //     assert!(parent.eq(current));
-    // }
+    #[test]
+    fn parse_convert_to_map_test() {
+        let mut map = HashMap::new();
+        map.insert(String::from("key_1"), "ABC");
+        map.insert(String::from("key_2"), "50");
+        map.insert(String::from("key_3"), "value");
+        let result = to_key_list(&map);
+
+        assert!(result.iter().any(|&key| key == "key_1"));
+        assert!(result.iter().any(|&key| key == "key_2"));
+        assert!(result.iter().any(|&key| key == "key_3"));
+    }
+
+    #[test]
+    fn parse_default_env_no_value() {
+        let result = default_env("CHECK");
+        let expect = String::from("");
+        assert_eq!(expect, result);
+    }
+
+    #[test]
+    fn parse_default_env_has_value() {
+        env::set_var("CHECK", "value");
+        let result = default_env("CHECK");
+        let expect = String::from("value");
+        assert_eq!(expect, result);
+    }
 }
 
+use crate::cmdline::Opt;
 use awsp::{default_config_location, parse_config_file};
 
-use crate::cmdline::Opt;
 use dialoguer::{theme::ColorfulTheme, Select};
+use std::collections::HashMap;
 use std::convert::TryInto;
-use std::path::{PathBuf};
-use std::process::{Command};
-use std::{env};
-use sysinfo::get_current_pid;
-use sysinfo::{ProcessExt, Signal, System, SystemExt};
-
-// #[cfg(unix)]car
-// use std::os::unix::prelude::CommandExt;
+use std::env;
+use std::path::PathBuf;
+use std::process::Command;
+use sysinfo::{get_current_pid, ProcessExt, Signal, System, SystemExt};
 
 const REGIONS_DISPLAY: &'static [&str] = &[
     "us-east-2      | Ohio",
@@ -90,65 +104,83 @@ const REGIONS: &'static [&str] = &[
     "sa-east-1",
 ];
 
-// TODO pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
+const AWS_DEFAULT_PROFILE: &str = "AWS_PROFILE";
+const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
+
+// TODO Error Handler
+// pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 pub fn run(opt: &Opt) {
-    
-    let location = default_config_location().unwrap();
-    let config_file = parse_config_file(location.as_path()).unwrap();
-    
-    let mut profile_list = vec![];
-        
-    for profile in config_file.keys() {
-        // dbg!(profile);
-        profile_list.push(profile);
-    }
-
-    let profile_list = profile_list.as_slice().try_into().unwrap();
-
-    // dbg!("kai: {}", &profile_list);
-
     if !opt.region {
-        let default_region = match env::var("AWS_PROFILE") {
-            Ok(aws_profile) => aws_profile,
-            Err(_) => String::from("")
-        };
-        let display_prompt = format!("profile (current: {} )", default_region);
-        let selection = display(display_prompt, profile_list, 0);
-        // dbg!(profile_list[selection]);
-        select_profile(profile_list[selection]);
+        profile_menu();
     }
-    
-    let default_profile = match env::var("AWS_DEFAULT_REGION") {
-        Ok(aws_region) => aws_region,
-        Err(_) => String::from("")
-    };
+    region_menu();
 
-    let display_prompt = format!("region (current: {} )", default_profile);
-    let selection = display(display_prompt, REGIONS_DISPLAY, 0);
-    // dbg!(REGIONS[selection]);
-    select_region(REGIONS[selection]);
+    exec_process();
 
-    
-    Command::new(find_shell().unwrap()).spawn().unwrap().wait().unwrap();
-    //TODO Reuse Process in find shell
-    let current_pid = get_current_pid().ok().unwrap();
-    let s = System::new_all();
-    let current_process = s.process(current_pid).unwrap();
-    let parent_pid = current_process.parent().unwrap();
-    s.process(parent_pid).unwrap().kill(Signal::Kill);
-
-    // TODO handle error case result<(), Box<dyn Error>>
+    // TODO Error Handler
     // Ok(())
 }
 
-fn find_shell() -> Option<PathBuf> {
-    let current_pid = get_current_pid().ok()?;
+fn profile_menu() {
+    let location = default_config_location().unwrap();
+    let config_file = parse_config_file(location.as_path()).unwrap();
+    let profile_list = to_key_list(&config_file);
+    let profile_list = profile_list.as_slice().try_into().unwrap();
+    let default_profile = default_env("AWS_PROFILE");
+    let display_prompt = format!("profile (current: {} )", default_profile);
+    let selection = display(display_prompt, profile_list, 0);
+    select_profile(profile_list[selection]);
+}
+
+fn region_menu() {
+    let default_region = default_env("AWS_DEFAULT_REGION");
+    let display_prompt = format!("region (current: {} )", default_region);
+    let selection = display(display_prompt, REGIONS_DISPLAY, 0);
+    select_region(REGIONS[selection]);
+}
+
+fn exec_process() {
+    let current_pid = get_current_pid().ok().unwrap();
+    Command::new(find_shell(current_pid).unwrap())
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
+    terminate_parent_process(current_pid);
+}
+
+fn default_env(env: &str) -> String {
+    match env::var(env) {
+        Ok(env) => env,
+        Err(_) => String::from(""),
+    }
+}
+
+fn to_key_list<'a, K, V>(map: &'a HashMap<K, V>) -> Vec<&'a K> {
+    let mut key_list = Vec::new();
+
+    for key in map.keys() {
+        key_list.push(key);
+    }
+
+    key_list
+}
+
+fn find_shell(current_pid: i32) -> Option<PathBuf> {
     let s = System::new_all();
     let current_process = s.process(current_pid)?;
     let parent_pid = current_process.parent()?;
     let parent_process = s.process(parent_pid)?;
     let shell_path = parent_process.exe();
     Some(shell_path.to_path_buf())
+}
+
+fn terminate_parent_process(pid: i32) {
+    let s = System::new_all();
+    let current_process = s.process(pid).unwrap();
+    let parent_pid = current_process.parent().unwrap();
+    let parent_process = s.process(parent_pid).unwrap();
+    parent_process.kill(Signal::Kill);
 }
 
 fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> usize {
@@ -162,14 +194,11 @@ fn display<T: ToString>(display_prompt: String, list: &[T], default: usize) -> u
 }
 
 fn select_profile(profile: &str) {
-    // dbg!(profile);
-    env::set_var("AWS_PROFILE", profile);
-    // dbg!(env::var("AWS_PROFILE").unwrap());
+    env::set_var(AWS_DEFAULT_PROFILE, profile);
 }
 
 fn select_region(region: &str) {
-    // dbg!(region);
-    env::set_var("AWS_DEFAULT_REGION", region);
+    env::set_var(AWS_DEFAULT_REGION, region);
 }
 
 // TODO manage stack process when run awsp multiple
