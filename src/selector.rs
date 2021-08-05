@@ -21,15 +21,15 @@ mod tests {
         assert_eq!(expect, result);
     }
 
-    #[test]
-    fn string_eq() {
-        let parent = Path::new("target/debug/kaiped");
-        let current = Path::new("/usr/local/bin/awsp");
-        let parent = parent.to_str().unwrap();
-        let current = current.to_str().unwrap();
-        // dbg!(parent.ne(current));
-        assert!(parent.eq(current));
-    }
+    // #[test]
+    // fn string_eq() {
+    //     let parent = Path::new("target/debug/kaiped");
+    //     let current = Path::new("/usr/local/bin/awsp");
+    //     let parent = parent.to_str().unwrap();
+    //     let current = current.to_str().unwrap();
+    //     // dbg!(parent.ne(current));
+    //     assert!(parent.eq(current));
+    // }
 }
 
 use awsp::{default_config_location, parse_config_file};
