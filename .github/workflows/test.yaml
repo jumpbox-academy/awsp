@@ -1,0 +1,31 @@
+name: Test and Coverage
+
+on: [push, pull_request]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --no-fail-fast
+        env:
+          CARGO_INCREMENTAL: '0'
+          RUSTFLAGS: '-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort'
+          RUSTDOCFLAGS: '-Cpanic=abort'
+
+      - id: coverage  
+        uses: actions-rs/grcov@v0.1
+
+      - name: Upload coverage to Codecov
+        run: bash <(curl -s https://codecov.io/bash) -f ${{ steps.coverage.outputs.report }}
