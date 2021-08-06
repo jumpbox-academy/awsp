@@ -8,6 +8,7 @@ edition = "2018"
 [dependencies]
 dialoguer = "0.8.0"
 dirs = "3.0.2"
+log = "0.4.14"
 regex = "1.5.4"
 rusoto_credential = "0.47.0"
 structopt = "0.3.22"

@@ -54,6 +54,7 @@ version = "0.0.1-beta"
 dependencies = [
  "dialoguer",
  "dirs",
+ "log",
  "regex",
  "rusoto_credential",
  "structopt",

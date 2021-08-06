@@ -53,7 +53,7 @@ use crate::cmdline::Opt;
 use awsp::{default_config_location, parse_config_file};
 
 use dialoguer::{theme::ColorfulTheme, Select};
-use std::collections::HashMap;
+use std::{collections::HashMap, process};
 use std::convert::TryInto;
 use std::env;
 use std::path::PathBuf;
@@ -106,14 +106,21 @@ const REGIONS: &'static [&str] = &[
 
 const AWS_DEFAULT_PROFILE: &str = "AWS_PROFILE";
 const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
 
 // TODO Error Handler
 // pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 pub fn run(opt: &Opt) {
-    if !opt.region {
+    
+    if opt.version.unwrap() {
+        println!("awsp: {}",VERSION);
+        process::exit(1);
+    } else if opt.region.unwrap() {
+        region_menu();
+    } else {
         profile_menu();
+        region_menu();
     }
-    region_menu();
 
     exec_process();
 

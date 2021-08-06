@@ -1,13 +1,38 @@
+
 use structopt::StructOpt;
+use std::path::PathBuf;
 
 #[derive(Debug, StructOpt)]
-#[structopt(name = "aws ops", about = "AWS Configure Profile")]
+#[structopt(
+    name = "aws ops", 
+    about = "AWS Configure Profile"
+)]
 pub struct Opt {
-    #[structopt(short = "r", long = "region")]
-    pub region: bool,
+
+    #[structopt(
+        short = "r",
+        long = "region",
+        help = "Region Selector"
+    )]
+    pub region: Option<bool>,
     // TODO add explicit profile
     // #[structopt(short = "p", long = "profile")]
     // pub profile: String,
+  
+    #[structopt(
+        short = "v", 
+        long = "version",
+        help = "Print version info and exit"
+    )]
+    pub version: Option<bool>,
+    
+    #[structopt(
+        short = "c", 
+        long = "config", 
+        parse(from_os_str),
+        help = "Override a aws configuration file (default = ~/.aws/config)"
+    )]
+    pub config: Option<PathBuf>,
 }
 
 impl Opt {
