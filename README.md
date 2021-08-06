@@ -16,8 +16,10 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 
 ## Installation
 
-AWSP is available on Linux, ARM, macOS and Windows platforms.
-- Binaries for Linux, ARM, Windows and Mac are available as tarballs in the [release](https://github.com/kubeopsskills/awsp/releases) page
+AWSP is available on Linux, macOS, macOS-Arm64 and Windows platforms in the [release](https://github.com/kubeopsskills/awsp/releases) page.
+- Binaries for Linux, macOS, and macOS-Arm64 are available as tarballs 
+- Binary for Windows is available as zip file
+
 ## Build it yourself
 
 ### Prerequisite
