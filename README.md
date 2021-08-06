@@ -2,7 +2,7 @@
 AWSP provides an interactive terminal to interact with your AWS Profiles. The aim of this project is to make it easier to navigate, observe and manage your AWS Profiles in the wild. 
 
 ---
-
+[![codecov](https://codecov.io/gh/kubeopsskills/awsp/branch/beta/graph/badge.svg?token=5VBFYN3BBH)](https://codecov.io/gh/kubeopsskills/awsp)
 [![release](https://img.shields.io/github/v/release/kubeopsskills/awsp?logo=awsp)](https://github.com/kubeopsskills/awsp/releases)
 [![License Apache](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/kubeopsskills/awsp/blob/beta/LICENSE-APACHE)
 [![License MIT](https://img.shields.io/badge/license-MIT-green?label=License)](https://github.com/kubeopsskills/awsp/blob/beta/LICENSE-MIT)
@@ -16,8 +16,10 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 
 ## Installation
 
-AWSP is available on Linux, ARM, macOS and Windows platforms.
-- Binaries for Linux, ARM, Windows and Mac are available as tarballs in the [release](https://github.com/kubeopsskills/awsp/releases) page
+AWSP is available on Linux, macOS, macOS-ARM64 and Windows platforms in the [release](https://github.com/kubeopsskills/awsp/releases) page.
+- Binaries for Linux, macOS, and macOS-ARM64 are available as tarballs 
+- Executable File for Windows is available as zip file
+
 ## Build it yourself
 
 ### Prerequisite
