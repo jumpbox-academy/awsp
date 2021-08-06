@@ -10,19 +10,62 @@ AWSP provide a interactive terminal to interact with your AWS Profile. The aim o
 
 ---
 
-## Description
-
-An in-depth paragraph about your project and overview of use.
 
 ## Demo
-TODO in Gif mode
+![screenshot1](./assets/images/select-profile.png)
+![screenshot2](./assets/images/select-region.png)
+
+## Prerequisite
+- rust: [rust](https://www.rust-lang.org/tools/install)
+- upx: [upx](https://upx.github.io/)
 
 ## Getting Started
-TODO wait release
+- Clone the repository to your local machine.
+- `cd` to the root of project folder.
+### Build
+```bash
+make all
+```
+
+### Link binary to $Path
+```bash
+ln -s /target/release/awsp ~/usr/local/bin/awsp
+```
+
+
+## Usage
+```bash
+USAGE:
+    awsp [OPTIONS]
+
+FLAGS:
+    -h, --help    Prints help information
+
+OPTIONS:
+    -c, --config <config>      Override a aws configuration file (default = ~/.aws/config)
+    -r, --region <region>      Region Selector
+    -v, --version <version>    Print version info and exit
+```
 
 ## Contributing
 
-We'd love your help! Please see [CONTRIBUTING.md][contrib] to learn about the
+We'd love your help! Please see [CONTRIBUTING][contrib] to learn about the
 kinds of contributions we're looking for.
 
+
+## Todo
+- We use [GitHub Issues][github-issue] to track our to do items.
+- Please check the [following link][follow] if you would like to contribute to the project.
+
+## CHANGELOG
+See [CHANGELOG][changelog]
+
+
 [contrib]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
+[follow]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
+[changelog]: https://github.com/kubeopsskills/awsp/blob/beta/CHANGELOG.md
+[github-issue]: https://github.com/kubeopsskills/awsp/issues/new
+
+
+
+
