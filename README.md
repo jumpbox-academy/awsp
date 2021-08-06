@@ -10,15 +10,23 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 
 ---
 
+
+## Example
+<img src="./assets/images/select-profile.png" width="50%">
+<img src="./assets/images/select-region.png" width="50%">
+
+You can select your profile/region by ←, ↑, → ↓. Enter key to validate.
+
+
 ## Demo
-![screenshot1](./assets/images/select-profile.png)
-![screenshot2](./assets/images/select-region.png)
+
+
 
 ## Installation
 
 AWSP is available on Linux, macOS, macOS-ARM64 and Windows platforms in the [release](https://github.com/kubeopsskills/awsp/releases) page.
 - Binaries for Linux, macOS, and macOS-ARM64 are available as tarballs 
-- Executable File for Windows is available as zip file
+- Executable File for Windows is available as a zip file
 
 ## Build it yourself
 
@@ -67,7 +75,7 @@ See [CHANGELOG][changelog]
 ## Reporting issues and feedback
 If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kubeopsskills/awsp/issues) section of our GitHub repo.
 
-[contrib]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
-[follow]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
-[changelog]: https://github.com/kubeopsskills/awsp/blob/beta/CHANGELOG.md
+[contrib]: ./CONTRIBUTING.md
+[follow]: ./CONTRIBUTING.md
+[changelog]: ./CHANGELOG.md
 [github-issue]: https://github.com/kubeopsskills/awsp/issues/new
