@@ -42,5 +42,12 @@ jobs:
         name: Generate code coverage report  
         uses: actions-rs/grcov@v0.1
 
-      - name: Upload code coverage report to Codecov
-        run: bash <(curl -s https://codecov.io/bash) -f ${{ steps.coverage.outputs.report }}
+      - uses: codecov/codecov-action@v2
+        name: Upload code coverage report to Codecov
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ steps.coverage.outputs.report }}
+          flags: unittests 
+          name: codecov-awsp
+          fail_ci_if_error: true 
+          verbose: true
