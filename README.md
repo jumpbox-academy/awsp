@@ -1,5 +1,5 @@
 # AWSP - CLI To Manage your AWS Profiles!
-AWSP provide a interactive terminal to interact with your AWS Profile. The aim of this project is to make it easier to navigate, observe and manage your AWS Profile in the wild. 
+AWSP provides an interactive terminal to interact with your AWS Profiles. The aim of this project is to make it easier to navigate, observe and manage your AWS Profiles in the wild. 
 
 ---
 
@@ -10,19 +10,24 @@ AWSP provide a interactive terminal to interact with your AWS Profile. The aim o
 
 ---
 
-
 ## Demo
 ![screenshot1](./assets/images/select-profile.png)
 ![screenshot2](./assets/images/select-region.png)
 
-## Prerequisite
+## Installation
+
+AWSP is available on Linux, ARM, macOS and Windows platforms.
+- Binaries for Linux, ARM, Windows and Mac are available as tarballs in the [release](https://github.com/kubeopsskills/awsp/releases) page
+## Build it yourself
+
+### Prerequisite
 - rust: [rust](https://www.rust-lang.org/tools/install)
 - upx: [upx](https://upx.github.io/)
 
-## Getting Started
+### Getting Started
 - Clone the repository to your local machine.
 - `cd` to the root of project folder.
-### Build
+
 ```bash
 make all
 ```
@@ -31,8 +36,6 @@ make all
 ```bash
 ln -s /target/release/awsp ~/usr/local/bin/awsp
 ```
-
-
 ## Usage
 ```bash
 USAGE:
@@ -42,7 +45,7 @@ FLAGS:
     -h, --help    Prints help information
 
 OPTIONS:
-    -c, --config <config>      Override a aws configuration file (default = ~/.aws/config)
+    -c, --config <config>      Override an aws configuration file (default = ~/.aws/config)
     -r, --region <region>      Region Selector
     -v, --version <version>    Print version info and exit
 ```
@@ -52,7 +55,6 @@ OPTIONS:
 We'd love your help! Please see [CONTRIBUTING][contrib] to learn about the
 kinds of contributions we're looking for.
 
-
 ## Todo
 - We use [GitHub Issues][github-issue] to track our to do items.
 - Please check the [following link][follow] if you would like to contribute to the project.
@@ -60,12 +62,10 @@ kinds of contributions we're looking for.
 ## CHANGELOG
 See [CHANGELOG][changelog]
 
+## Reporting issues and feedback
+If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kubeopsskills/awsp/issues) section of our GitHub repo.
 
 [contrib]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
 [follow]: https://github.com/kubeopsskills/awsp/blob/beta/CONTRIBUTING.md
 [changelog]: https://github.com/kubeopsskills/awsp/blob/beta/CHANGELOG.md
 [github-issue]: https://github.com/kubeopsskills/awsp/issues/new
-
-
-
-
