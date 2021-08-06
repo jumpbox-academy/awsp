@@ -30,7 +30,7 @@ pub struct Opt {
         short = "c", 
         long = "config", 
         parse(from_os_str),
-        help = "Override a aws configuration file (default = ~/.aws/config)"
+        help = "Override an aws configuration file (default = ~/.aws/config)"
     )]
     pub config: Option<PathBuf>,
 }
