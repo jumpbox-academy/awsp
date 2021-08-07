@@ -1,4 +1,4 @@
-## [0.1.0](https://github.com/kubeopsskills/awsp/commits/)
+## [v0.1.0](https://github.com/kubeopsskills/awsp/commits/)
 
 
 ### Bug Fixes

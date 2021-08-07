@@ -159,13 +159,12 @@ fn region_menu() {
 }
 
 fn exec_process() {
-    let current_pid = get_current_pid().ok().unwrap();
-    Command::new(find_shell(current_pid).unwrap())
+    Command::new(find_shell().unwrap())
         .spawn()
         .unwrap()
         .wait()
         .unwrap();
-    terminate_parent_process(current_pid);
+    terminate_parent_process();
 }
 
 fn default_env(env: &str) -> String {
@@ -185,7 +184,8 @@ fn to_key_list<'a, K, V>(map: &'a HashMap<K, V>) -> Vec<&'a K> {
     key_list
 }
 
-fn find_shell(current_pid: i32) -> Option<PathBuf> {
+fn find_shell() -> Option<PathBuf> {
+    let current_pid = get_current_pid().ok().unwrap();
     let s = System::new_all();
     let current_process = s.process(current_pid)?;
     let parent_pid = current_process.parent()?;
@@ -194,7 +194,8 @@ fn find_shell(current_pid: i32) -> Option<PathBuf> {
     Some(shell_path.to_path_buf())
 }
 
-fn terminate_parent_process(pid: i32) {
+fn terminate_parent_process() {
+    let pid = get_current_pid().ok().unwrap();
     let s = System::new_all();
     let current_process = s.process(pid).unwrap();
     let parent_pid = current_process.parent().unwrap();
