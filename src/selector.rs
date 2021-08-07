@@ -1,54 +1,3 @@
-#[cfg(test)]
-mod tests {
-
-    use super::*;
-    use std::env;
-
-    #[test]
-    fn select_profile_with_selection() {
-        select_profile("ped");
-        let result = env::var("AWS_PROFILE").unwrap();
-        let expect = String::from("ped");
-        assert_eq!(expect, result);
-    }
-
-    #[test]
-    fn select_region_with_selection() {
-        select_region("ped");
-        let result = env::var("AWS_DEFAULT_REGION").unwrap();
-        let expect = String::from("ped");
-        assert_eq!(expect, result);
-    }
-
-    #[test]
-    fn parse_convert_to_map_test() {
-        let mut map = HashMap::new();
-        map.insert(String::from("key_1"), "ABC");
-        map.insert(String::from("key_2"), "50");
-        map.insert(String::from("key_3"), "value");
-        let result = to_key_list(&map);
-
-        assert!(result.iter().any(|&key| key == "key_1"));
-        assert!(result.iter().any(|&key| key == "key_2"));
-        assert!(result.iter().any(|&key| key == "key_3"));
-    }
-
-    #[test]
-    fn parse_default_env_no_value() {
-        let result = default_env("CHECK");
-        let expect = String::from("");
-        assert_eq!(expect, result);
-    }
-
-    #[test]
-    fn parse_default_env_has_value() {
-        env::set_var("CHECK", "value");
-        let result = default_env("CHECK");
-        let expect = String::from("value");
-        assert_eq!(expect, result);
-    }
-}
-
 use crate::cmdline::Opt;
 use awsp::{default_config_location, parse_config_file};
 
@@ -219,6 +168,57 @@ fn select_profile(profile: &str) {
 
 fn select_region(region: &str) {
     env::set_var(AWS_DEFAULT_REGION, region);
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use std::env;
+
+    #[test]
+    fn select_profile_with_selection() {
+        select_profile("ped");
+        let result = env::var("AWS_PROFILE").unwrap();
+        let expect = String::from("ped");
+        assert_eq!(expect, result);
+    }
+
+    #[test]
+    fn select_region_with_selection() {
+        select_region("ped");
+        let result = env::var("AWS_DEFAULT_REGION").unwrap();
+        let expect = String::from("ped");
+        assert_eq!(expect, result);
+    }
+
+    #[test]
+    fn parse_convert_to_map_test() {
+        let mut map = HashMap::new();
+        map.insert(String::from("key_1"), "ABC");
+        map.insert(String::from("key_2"), "50");
+        map.insert(String::from("key_3"), "value");
+        let result = to_key_list(&map);
+
+        assert!(result.iter().any(|&key| key == "key_1"));
+        assert!(result.iter().any(|&key| key == "key_2"));
+        assert!(result.iter().any(|&key| key == "key_3"));
+    }
+
+    #[test]
+    fn parse_default_env_no_value() {
+        let result = default_env("CHECK");
+        let expect = String::from("");
+        assert_eq!(expect, result);
+    }
+
+    #[test]
+    fn parse_default_env_has_value() {
+        env::set_var("CHECK", "value");
+        let result = default_env("CHECK");
+        let expect = String::from("value");
+        assert_eq!(expect, result);
+    }
 }
 
 // TODO manage stack process when run awsp multiple
