@@ -54,13 +54,12 @@ use awsp::{default_config_location, parse_config_file};
 
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::{collections::HashMap, process};
-use std::convert::TryInto;
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 use sysinfo::{get_current_pid, ProcessExt, Signal, System, SystemExt};
 
-const REGIONS_DISPLAY: &'static [&str] = &[
+const REGIONS_DISPLAY: &[&str] = &[
     "us-east-2      | Ohio",
     "us-east-1      | N. Virginia",
     "us-west-1      | N. California",
@@ -82,7 +81,7 @@ const REGIONS_DISPLAY: &'static [&str] = &[
     "sa-east-1      | São Paulo",
 ];
 
-const REGIONS: &'static [&str] = &[
+const REGIONS: &[&str] = &[
     "us-east-2",
     "us-east-1",
     "us-west-1",
@@ -106,16 +105,16 @@ const REGIONS: &'static [&str] = &[
 
 const AWS_DEFAULT_PROFILE: &str = "AWS_PROFILE";
 const AWS_DEFAULT_REGION: &str = "AWS_DEFAULT_REGION";
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 // TODO Error Handler
 // pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 pub fn run(opt: &Opt) {
     
-    if opt.version.unwrap() {
+    if opt.version.is_some() && opt.version.unwrap() {
         println!("awsp: {}",VERSION);
         process::exit(1);
-    } else if opt.region.unwrap() {
+    } else if opt.region.is_some() && opt.region.unwrap() {
         region_menu();
     } else {
         profile_menu();
@@ -132,7 +131,7 @@ fn profile_menu() {
     let location = default_config_location().unwrap();
     let config_file = parse_config_file(location.as_path()).unwrap();
     let profile_list = to_key_list(&config_file);
-    let profile_list = profile_list.as_slice().try_into().unwrap();
+    let profile_list = profile_list.as_slice();
     let default_profile = default_env("AWS_PROFILE");
     let display_prompt = format!("profile (current: {} )", default_profile);
     let selection = display(display_prompt, profile_list, 0);

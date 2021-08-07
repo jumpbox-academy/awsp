@@ -1,7 +1,6 @@
 use cmdline::Opt;
 
 pub mod cmdline;
-pub mod config;
 mod selector;
 
 fn main() {
