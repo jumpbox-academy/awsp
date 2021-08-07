@@ -112,7 +112,8 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub fn run(opt: &Opt) {
     
     if opt.version {
-        println!("awsp: {}",VERSION);
+        print!("\nawsp: ");
+        green_ln!("{}\n",VERSION);
         process::exit(1);
     } else if opt.region {
         region_menu();

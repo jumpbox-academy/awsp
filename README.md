@@ -17,9 +17,8 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 
 You can select your profile/region by ←, ↑, → ↓. Enter key to validate.
 
-
 ## Demo
-
+<a href="https://asciinema.org/a/429376?autoplay=1"><img src="https://asciinema.org/a/429376.svg" width="50%"/></a>
 
 
 ## Installation
@@ -46,6 +45,8 @@ make all
 ```bash
 ln -s /target/release/awsp ~/usr/local/bin/awsp
 ```
+
+
 ## Usage
 ```bash
 USAGE:
@@ -60,17 +61,21 @@ OPTIONS:
     -v, --version <version>    Print version info and exit
 ```
 
+
 ## Contributing
 
 We'd love your help! Please see [CONTRIBUTING][contrib] to learn about the
 kinds of contributions we're looking for.
 
+
 ## Todo
 - We use [GitHub Issues][github-issue] to track our to do items.
 - Please check the [following link][follow] if you would like to contribute to the project.
 
+
 ## CHANGELOG
 See [CHANGELOG][changelog]
+
 
 ## Reporting issues and feedback
 If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kubeopsskills/awsp/issues) section of our GitHub repo.

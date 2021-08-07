@@ -3,7 +3,7 @@ TARGET_PATH = target/release
 buildWindows:
 	cargo build --release 
 
-buildMacOS:
+buildMacOs:
 	cargo build --release
 	upx --best --lzma $(TARGET_PATH)/awsp
 
@@ -12,7 +12,8 @@ buildLinux:
 	upx --best --lzma $(TARGET_PATH)/awsp
 
 # build: buildWindows buildMacOS buildLinux
-build: cargo build --release
+build: 
+	cargo build --release
 
 clean:
 	rm -rf target
