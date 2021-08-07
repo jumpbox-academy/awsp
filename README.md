@@ -18,7 +18,7 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 You can select your profile/region by ←, ↑, → ↓. Enter key to validate.
 
 ## Demo
-<img src="./assets/images/demo.gif" width="50%">
+<img src="./assets/images/demo.gif"  width="80%">
 
 
 ## Installation
