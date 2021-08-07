@@ -111,20 +111,32 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 // pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 pub fn run(opt: &Opt) {
     
-    if opt.version.is_some() && opt.version.unwrap() {
+    if opt.version {
         println!("awsp: {}",VERSION);
         process::exit(1);
-    } else if opt.region.is_some() && opt.region.unwrap() {
+    } else if opt.region {
         region_menu();
     } else {
         profile_menu();
         region_menu();
     }
 
+    display_selected();
+
     exec_process();
 
     // TODO Error Handler
     // Ok(())
+}
+
+fn display_selected() {
+    // clear screen charactor
+    print!("{esc}c", esc = 27 as char);
+    green!("\n ->");
+    print!("  Profile: ");
+    green!("{}",default_env("AWS_PROFILE"));
+    print!(" | Region: ");
+    green_ln!("{} \n",default_env("AWS_DEFAULT_REGION"));
 }
 
 fn profile_menu() {

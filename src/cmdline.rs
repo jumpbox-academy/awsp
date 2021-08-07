@@ -14,7 +14,7 @@ pub struct Opt {
         long = "region",
         help = "Region Selector"
     )]
-    pub region: Option<bool>,
+    pub region: bool,
     // TODO add explicit profile
     // #[structopt(short = "p", long = "profile")]
     // pub profile: String,
@@ -24,7 +24,7 @@ pub struct Opt {
         long = "version",
         help = "Print version info and exit"
     )]
-    pub version: Option<bool>,
+    pub version: bool,
     
     #[structopt(
         short = "c", 

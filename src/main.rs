@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate colour;
+
 use cmdline::Opt;
 
 pub mod cmdline;
