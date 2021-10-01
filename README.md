@@ -1,5 +1,6 @@
 # AWSP - CLI To Manage your AWS Profiles!
-AWSP provides an interactive terminal to interact with your AWS Profiles. The aim of this project is to make it easier to navigate, observe and manage your AWS Profiles in the wild. 
+
+AWSP provides an interactive terminal to interact with your [AWS Profiles](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html). The aim of this project is to make it easier to navigate, observe and manage your AWS Profiles in the wild.
 
 ---
 [![codecov](https://codecov.io/gh/kubeopsskills/awsp/branch/beta/graph/badge.svg?token=5VBFYN3BBH)](https://codecov.io/gh/kubeopsskills/awsp)
@@ -10,44 +11,52 @@ AWSP provides an interactive terminal to interact with your AWS Profiles. The ai
 
 ---
 
-
 ## Example
+
 <img src="./assets/images/select-profile.png" width="50%">
 <img src="./assets/images/select-region.png" width="50%">
 
 You can select your profile/region by ←, ↑, → ↓. Enter key to validate.
 
 ## Demo
-<img src="./assets/images/demo.gif"  width="80%">
 
+<img src="./assets/images/demo.gif"  width="80%">
 
 ## Installation
 
 AWSP is available on Linux, macOS, macOS-ARM64 and Windows platforms in the [release](https://github.com/kubeopsskills/awsp/releases) page.
-- Binaries for Linux, macOS, and macOS-ARM64 are available as tarballs 
+
+- Binaries for Linux, macOS, and macOS-ARM64 are available as tarballs
 - Executable File for Windows is available as a zip file
 
 ## Build it yourself
 
 ### Prerequisite
+
 - rust: [rust](https://www.rust-lang.org/tools/install)
-- upx: [upx](https://upx.github.io/)
 
 ### Getting Started
+
 - Clone the repository to your local machine.
 - `cd` to the root of project folder.
+- Execute following command
 
 ```bash
-make all
+make build
 ```
 
+Executable binary file will locate in `{{root}}/target/release` path. To start the program, simply run `awsp` binary file.
+
 ### Link binary to $Path
+
+For linux user, you can simply run following command
+
 ```bash
 ln -s /target/release/awsp ~/usr/local/bin/awsp
 ```
 
-
 ## Usage
+
 ```bash
 USAGE:
     awsp [OPTIONS]
@@ -61,23 +70,22 @@ OPTIONS:
     -v, --version <version>    Print version info and exit
 ```
 
-
 ## Contributing
 
 We'd love your help! Please see [CONTRIBUTING][contrib] to learn about the
 kinds of contributions we're looking for.
 
-
 ## Todo
+
 - We use [GitHub Issues][github-issue] to track our to do items.
 - Please check the [following link][follow] if you would like to contribute to the project.
 
-
 ## CHANGELOG
+
 See [CHANGELOG][changelog]
 
-
 ## Reporting issues and feedback
+
 If you encounter any bugs with the tool please file an issue in the [Issues](https://github.com/kubeopsskills/awsp/issues) section of our GitHub repo.
 
 [contrib]: ./CONTRIBUTING.md
