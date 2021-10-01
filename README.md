@@ -34,6 +34,7 @@ AWSP is available on Linux, macOS, macOS-ARM64 and Windows platforms in the [rel
 ### Prerequisite
 
 - rust: [rust](https://www.rust-lang.org/tools/install)
+- (optional) upx: [upx](https://upx.github.io/)
 
 ### Getting Started
 
