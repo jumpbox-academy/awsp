@@ -53,10 +53,10 @@ use crate::cmdline::Opt;
 use awsp::{default_config_location, parse_config_file};
 
 use dialoguer::{theme::ColorfulTheme, Select};
-use std::{collections::HashMap, process};
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{collections::HashMap, process};
 use sysinfo::{get_current_pid, ProcessExt, Signal, System, SystemExt};
 
 const REGIONS_DISPLAY: &[&str] = &[
@@ -110,10 +110,9 @@ const VERSION: &str = env!("CARGO_PKG_VERSION");
 // TODO Error Handler
 // pub fn run(opt: &Opt) -> Result<(), Box<dyn Error>> {
 pub fn run(opt: &Opt) {
-    
     if opt.version {
         print!("\nawsp: ");
-        green_ln!("{}\n",VERSION);
+        green_ln!("{}\n", VERSION);
         process::exit(1);
     } else if opt.region {
         region_menu();
@@ -135,9 +134,9 @@ fn display_selected() {
     print!("{esc}c", esc = 27 as char);
     green!("\n ->");
     print!("  Profile: ");
-    green!("{}",default_env("AWS_PROFILE"));
+    green!("{}", default_env("AWS_PROFILE"));
     print!(" | Region: ");
-    green_ln!("{} \n",default_env("AWS_DEFAULT_REGION"));
+    green_ln!("{} \n", default_env("AWS_DEFAULT_REGION"));
 }
 
 fn profile_menu() {
