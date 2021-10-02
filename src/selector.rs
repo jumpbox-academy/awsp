@@ -174,7 +174,7 @@ fn default_env(env: &str) -> String {
     }
 }
 
-fn to_key_list<'a, K, V>(map: &'a HashMap<K, V>) -> Vec<&'a K> {
+fn to_key_list<K, V>(map: &HashMap<K, V>) -> Vec<&K> {
     let mut key_list = Vec::new();
 
     for key in map.keys() {
