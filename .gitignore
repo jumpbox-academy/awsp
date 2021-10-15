@@ -7,3 +7,6 @@
 ._.DS_Store
 **/.DS_Store
 **/._.DS_Store
+
+# Ignore idea
+.idea

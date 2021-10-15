@@ -255,10 +255,12 @@ pub fn parse_credentials_file(
 
         // handle the opening of named profile blocks
         if profile_regex.is_match(&unwrapped_line) {
-            if profile_name.is_some() && access_key.is_some() && secret_key.is_some() {
-                let creds =
-                    AwsCredentials::new(access_key.unwrap(), secret_key.unwrap(), token, None);
-                profiles.insert(profile_name.unwrap(), creds);
+            if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
+                (profile_name, access_key, secret_key)
+            {
+                let creds = AwsCredentials::new(access_key_value, secret_key_value, token, None);
+
+                profiles.insert(profile_name_value, creds);
             }
 
             access_key = None;
@@ -301,9 +303,12 @@ pub fn parse_credentials_file(
         }
     }
 
-    if profile_name.is_some() && access_key.is_some() && secret_key.is_some() {
-        let creds = AwsCredentials::new(access_key.unwrap(), secret_key.unwrap(), token, None);
-        profiles.insert(profile_name.unwrap(), creds);
+    if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
+    (profile_name, access_key, secret_key)
+    {
+        let creds = AwsCredentials::new(access_key_value, secret_key_value, token, None);
+
+        profiles.insert(profile_name_value, creds);
     }
 
     if profiles.is_empty() {
