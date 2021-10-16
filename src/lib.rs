@@ -55,15 +55,11 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
 
     let profile_regex = new_profile_regex();
     let file = File::open(file_path).expect("expected file");
-    let file_lines = BufReader::new(&file);
-    let result: (HashMap<String, HashMap<String, String>>, Option<String>) = file_lines
+    let reader = BufReader::new(&file);
+
+    let result: (HashMap<String, HashMap<String, String>>, Option<String>) = reader
         .lines()
-        .filter_map(|line| {
-            line.ok()
-                .map(|l| l.trim_matches(' ').to_owned())
-                .into_iter()
-                .find(|l| !l.starts_with('#') || !l.is_empty())
-        })
+        .filter_map(|line| try_get_config_line_from(line.ok()))
         .fold(Default::default(), |(mut result, profile), line| {
             if profile_regex.is_match(&line) {
                 let caps = profile_regex.captures(&line).unwrap();
@@ -91,6 +87,17 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
 
 fn new_profile_regex() -> Regex {
     Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
+}
+
+fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
+    maybe_config_line.filter(|line| {
+        let line = line.trim().to_owned();
+        !is_comment(&line) && !line.is_empty()
+    })
+}
+
+fn is_comment(to_check: &str) -> bool {
+    to_check.starts_with('#')
 }
 
 pub fn parse_credentials_file(
@@ -363,5 +370,32 @@ mod tests {
         let result = parse_config_file(Path::new("some/nonsense/path"));
 
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn try_get_config_line_from_should_return_none_when_given_line_is_comment() {
+        let input = Some("# comment".to_owned());
+
+        let result = try_get_config_line_from(input);
+
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn try_get_config_line_from_should_return_none_when_given_line_is_empty() {
+        let input = Some("".to_owned());
+
+        let result = try_get_config_line_from(input);
+
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn try_get_config_line_from_should_return_result_when_given_proper_config_line() {
+        let input = Some("someConfig".to_owned());
+
+        let result = try_get_config_line_from(input.clone());
+
+        assert_eq!(result, input);
     }
 }
