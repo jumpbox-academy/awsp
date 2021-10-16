@@ -7,6 +7,18 @@ use std::path::{Path, PathBuf};
 use std::{collections::HashMap, env::var};
 
 const AWS_CONFIG_FILE_ENV_VAR_NAME: &str = "AWS_CONFIG_FILE";
+const DEFAULT_AWS_CONFIG_FILE_PATH: &str = ".aws/config";
+
+/// Default config file location:
+/// 1: if set and not empty, use the value from environment variable `AWS_CONFIG_FILE`
+/// 2. otherwise return `~/.aws/config` (Linux/Mac) resp. `%USERPROFILE%\.aws\config` (Windows)
+pub fn get_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
+    let env = try_get_env_variable_value_from(AWS_CONFIG_FILE_ENV_VAR_NAME);
+    match env {
+        Some(path) => Ok(PathBuf::from(path)),
+        None => get_default_aws_config_file_path(),
+    }
+}
 
 fn try_get_env_variable_value_from(env_variable_name: &str) -> Option<String> {
     match var(env_variable_name) {
@@ -21,30 +33,19 @@ fn try_get_env_variable_value_from(env_variable_name: &str) -> Option<String> {
     }
 }
 
-/// Default config file location:
-/// 1: if set and not empty, use the value from environment variable ```AWS_CONFIG_FILE```
-/// 2. otherwise return `~/.aws/config` (Linux/Mac) resp. `%USERPROFILE%\.aws\config` (Windows)
-pub fn get_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
-    let env = try_get_env_variable_value_from(AWS_CONFIG_FILE_ENV_VAR_NAME);
-    match env {
-        Some(path) => Ok(PathBuf::from(path)),
-        None => get_default_aws_config_file_path(),
-    }
-}
-
 fn get_default_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
     match home_dir() {
-        Some(mut home_path) => {
-            home_path.push(".aws");
-            home_path.push("config");
-            Ok(home_path)
+        Some(home_path) => {
+            let home_path_str = home_path
+                .to_str()
+                .expect("Cannot parse home directory to &str.");
+            let default_aws_config_file_path =
+                format!("{}/{}", home_path_str, DEFAULT_AWS_CONFIG_FILE_PATH);
+
+            Ok(PathBuf::from(default_aws_config_file_path))
         }
         None => Err(CredentialsError::new("Failed to determine home directory.")),
     }
-}
-
-fn new_profile_regex() -> Regex {
-    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
 pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<String, String>>> {
@@ -90,6 +91,10 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
             }
         });
     Some(result.0)
+}
+
+fn new_profile_regex() -> Regex {
+    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
 pub fn parse_credentials_file(
@@ -204,9 +209,9 @@ pub fn parse_credentials_file(
 #[cfg(test)]
 mod tests {
 
-    use crate::try_get_env_variable_value_from;
+    use super::*;
+    use std::env::{remove_var, set_var};
     use std::path::Path;
-    use std::env::{set_var, remove_var};
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";
@@ -335,12 +340,25 @@ mod tests {
 
         set_var(env_var_name, env_var_value);
 
-        let result = try_get_env_variable_value_from(
-            env_var_name,
-        );
+        let result = try_get_env_variable_value_from(env_var_name);
 
         assert_eq!(result.unwrap(), env_var_value);
 
         remove_var(env_var_name);
+    }
+
+    // This test is to make sure that default aws config path will not be changed by mistake.
+    #[test]
+    fn get_default_aws_config_file_path_should_return_expected_default_path_when_called() {
+        let result = get_default_aws_config_file_path();
+
+        let home_dir_path_buf = home_dir().expect("Cannot get home directory.");
+        let home_dir = home_dir_path_buf
+            .to_str()
+            .expect("Cannot parse home directory to &str.");
+
+        let expected = format!("{}/.aws/config", home_dir);
+
+        assert_eq!(result.unwrap(), PathBuf::from(expected));
     }
 }
