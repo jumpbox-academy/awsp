@@ -1,120 +1,3 @@
-#[cfg(test)]
-mod tests {
-
-    use std::path::Path;
-
-    const DEFAULT: &str = "default";
-    const REGION: &str = "region";
-
-    #[test]
-    fn parse_config_file_default_profile() {
-        let result = super::parse_config_file(Path::new("tests/sample-data/default_config"));
-        assert!(result.is_some());
-        let profiles = result.unwrap();
-        assert_eq!(profiles.len(), 1);
-        let default_profile = profiles
-            .get(DEFAULT)
-            .expect("No Default profile in default_profile_credentials");
-        assert_eq!(default_profile.get(REGION), Some(&"us-east-2".to_string()));
-        assert_eq!(default_profile.get("output"), Some(&"json".to_string()));
-    }
-
-    #[test]
-    fn parse_config_file_multiple_profiles() {
-        let result =
-            super::parse_config_file(Path::new("tests/sample-data/multiple_profile_config"));
-        assert!(result.is_some());
-
-        let profiles = result.unwrap();
-        assert_eq!(profiles.len(), 3);
-
-        let foo_profile = profiles
-            .get("foo")
-            .expect("No foo profile in multiple_profile_credentials");
-        assert_eq!(foo_profile.get(REGION), Some(&"us-east-3".to_string()));
-        assert_eq!(foo_profile.get("output"), Some(&"json".to_string()));
-
-        let bar_profile = profiles
-            .get("bar")
-            .expect("No bar profile in multiple_profile_credentials");
-        assert_eq!(bar_profile.get(REGION), Some(&"us-east-4".to_string()));
-        assert_eq!(bar_profile.get("output"), Some(&"json".to_string()));
-    }
-
-    #[test]
-    fn parse_config_file_credential_process() {
-        let result =
-            super::parse_config_file(Path::new("tests/sample-data/credential_process_config"));
-        assert!(result.is_some());
-        let profiles = result.unwrap();
-        assert_eq!(profiles.len(), 2);
-        let default_profile = profiles
-            .get(DEFAULT)
-            .expect("No Default profile in default_profile_credentials");
-        assert_eq!(default_profile.get(REGION), Some(&"us-east-1".to_string()));
-        assert_eq!(
-            default_profile.get("credential_process"),
-            Some(&"cat tests/sample-data/credential_process_sample_response".to_string())
-        );
-    }
-
-    #[test]
-    fn parse_credentials_file_default_profile() {
-        let result = super::parse_credentials_file(Path::new(
-            "tests/sample-data/default_profile_credentials",
-        ));
-        assert!(result.is_ok());
-
-        let profiles = result.ok().unwrap();
-        assert_eq!(profiles.len(), 1);
-
-        let default_profile = profiles
-            .get(DEFAULT)
-            .expect("No Default profile in default_profile_credentials");
-        assert_eq!(default_profile.aws_access_key_id(), "foo");
-        assert_eq!(default_profile.aws_secret_access_key(), "bar");
-    }
-
-    #[test]
-    fn parse_credentials_file_multiple_profiles() {
-        let result = super::parse_credentials_file(Path::new(
-            "tests/sample-data/multiple_profile_credentials",
-        ));
-        assert!(result.is_ok());
-
-        let profiles = result.ok().unwrap();
-        assert_eq!(profiles.len(), 2);
-
-        let foo_profile = profiles
-            .get("foo")
-            .expect("No foo profile in multiple_profile_credentials");
-        assert_eq!(foo_profile.aws_access_key_id(), "foo_access_key");
-        assert_eq!(foo_profile.aws_secret_access_key(), "foo_secret_key");
-
-        let bar_profile = profiles
-            .get("bar")
-            .expect("No bar profile in multiple_profile_credentials");
-        assert_eq!(bar_profile.aws_access_key_id(), "bar_access_key");
-        assert_eq!(bar_profile.aws_secret_access_key(), "bar_secret_key");
-    }
-
-    #[test]
-    fn parse_all_values_credentials_file() {
-        let result =
-            super::parse_credentials_file(Path::new("tests/sample-data/full_profile_credentials"));
-        assert!(result.is_ok());
-
-        let profiles = result.ok().unwrap();
-        assert_eq!(profiles.len(), 1);
-
-        let default_profile = profiles
-            .get(DEFAULT)
-            .expect("No default profile in full_profile_credentials");
-        assert_eq!(default_profile.aws_access_key_id(), "foo");
-        assert_eq!(default_profile.aws_secret_access_key(), "bar");
-    }
-}
-
 use dirs::home_dir;
 use regex::Regex;
 use rusoto_credential::{AwsCredentials, CredentialsError};
@@ -125,8 +8,8 @@ use std::{collections::HashMap, env::var};
 
 const AWS_CONFIG_FILE: &str = "AWS_CONFIG_FILE";
 
-fn non_empty_env_var(name: &str) -> Option<String> {
-    match var(name) {
+fn get_aws_config_file_path_from(env_variable_name: &str) -> Option<String> {
+    match var(env_variable_name) {
         Ok(value) => {
             if value.is_empty() {
                 None
@@ -142,7 +25,7 @@ fn non_empty_env_var(name: &str) -> Option<String> {
 /// 1: if set and not empty, use the value from environment variable ```AWS_CONFIG_FILE```
 /// 2. otherwise return `~/.aws/config` (Linux/Mac) resp. `%USERPROFILE%\.aws\config` (Windows)
 pub fn default_config_location() -> Result<PathBuf, CredentialsError> {
-    let env = non_empty_env_var(AWS_CONFIG_FILE);
+    let env = get_aws_config_file_path_from(AWS_CONFIG_FILE);
     match env {
         Some(path) => Ok(PathBuf::from(path)),
         None => hardcoded_config_location(),
@@ -304,7 +187,7 @@ pub fn parse_credentials_file(
     }
 
     if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
-    (profile_name, access_key, secret_key)
+        (profile_name, access_key, secret_key)
     {
         let creds = AwsCredentials::new(access_key_value, secret_key_value, token, None);
 
@@ -316,4 +199,131 @@ pub fn parse_credentials_file(
     }
 
     Ok(profiles)
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::get_aws_config_file_path_from;
+    use std::path::Path;
+
+    const DEFAULT: &str = "default";
+    const REGION: &str = "region";
+
+    #[test]
+    fn parse_config_file_default_profile() {
+        let result = super::parse_config_file(Path::new("tests/sample-data/default_config"));
+        assert!(result.is_some());
+        let profiles = result.unwrap();
+        assert_eq!(profiles.len(), 1);
+        let default_profile = profiles
+            .get(DEFAULT)
+            .expect("No Default profile in default_profile_credentials");
+        assert_eq!(default_profile.get(REGION), Some(&"us-east-2".to_string()));
+        assert_eq!(default_profile.get("output"), Some(&"json".to_string()));
+    }
+
+    #[test]
+    fn parse_config_file_multiple_profiles() {
+        let result =
+            super::parse_config_file(Path::new("tests/sample-data/multiple_profile_config"));
+        assert!(result.is_some());
+
+        let profiles = result.unwrap();
+        assert_eq!(profiles.len(), 3);
+
+        let foo_profile = profiles
+            .get("foo")
+            .expect("No foo profile in multiple_profile_credentials");
+        assert_eq!(foo_profile.get(REGION), Some(&"us-east-3".to_string()));
+        assert_eq!(foo_profile.get("output"), Some(&"json".to_string()));
+
+        let bar_profile = profiles
+            .get("bar")
+            .expect("No bar profile in multiple_profile_credentials");
+        assert_eq!(bar_profile.get(REGION), Some(&"us-east-4".to_string()));
+        assert_eq!(bar_profile.get("output"), Some(&"json".to_string()));
+    }
+
+    #[test]
+    fn parse_config_file_credential_process() {
+        let result =
+            super::parse_config_file(Path::new("tests/sample-data/credential_process_config"));
+        assert!(result.is_some());
+        let profiles = result.unwrap();
+        assert_eq!(profiles.len(), 2);
+        let default_profile = profiles
+            .get(DEFAULT)
+            .expect("No Default profile in default_profile_credentials");
+        assert_eq!(default_profile.get(REGION), Some(&"us-east-1".to_string()));
+        assert_eq!(
+            default_profile.get("credential_process"),
+            Some(&"cat tests/sample-data/credential_process_sample_response".to_string())
+        );
+    }
+
+    #[test]
+    fn parse_credentials_file_default_profile() {
+        let result = super::parse_credentials_file(Path::new(
+            "tests/sample-data/default_profile_credentials",
+        ));
+        assert!(result.is_ok());
+
+        let profiles = result.ok().unwrap();
+        assert_eq!(profiles.len(), 1);
+
+        let default_profile = profiles
+            .get(DEFAULT)
+            .expect("No Default profile in default_profile_credentials");
+        assert_eq!(default_profile.aws_access_key_id(), "foo");
+        assert_eq!(default_profile.aws_secret_access_key(), "bar");
+    }
+
+    #[test]
+    fn parse_credentials_file_multiple_profiles() {
+        let result = super::parse_credentials_file(Path::new(
+            "tests/sample-data/multiple_profile_credentials",
+        ));
+        assert!(result.is_ok());
+
+        let profiles = result.ok().unwrap();
+        assert_eq!(profiles.len(), 2);
+
+        let foo_profile = profiles
+            .get("foo")
+            .expect("No foo profile in multiple_profile_credentials");
+        assert_eq!(foo_profile.aws_access_key_id(), "foo_access_key");
+        assert_eq!(foo_profile.aws_secret_access_key(), "foo_secret_key");
+
+        let bar_profile = profiles
+            .get("bar")
+            .expect("No bar profile in multiple_profile_credentials");
+        assert_eq!(bar_profile.aws_access_key_id(), "bar_access_key");
+        assert_eq!(bar_profile.aws_secret_access_key(), "bar_secret_key");
+    }
+
+    #[test]
+    fn parse_all_values_credentials_file() {
+        let result =
+            super::parse_credentials_file(Path::new("tests/sample-data/full_profile_credentials"));
+        assert!(result.is_ok());
+
+        let profiles = result.ok().unwrap();
+        assert_eq!(profiles.len(), 1);
+
+        let default_profile = profiles
+            .get(DEFAULT)
+            .expect("No default profile in full_profile_credentials");
+        assert_eq!(default_profile.aws_access_key_id(), "foo");
+        assert_eq!(default_profile.aws_secret_access_key(), "bar");
+    }
+
+    #[test]
+    fn get_aws_config_file_path_from_should_return_none_when_given_not_exist_env_variable() {
+        let result = get_aws_config_file_path_from(
+            "some_nonsense_name_which_should_not_be_one_of_env_var_name",
+        );
+
+        assert_eq!(result, None);
+    }
 }
