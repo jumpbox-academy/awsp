@@ -6,9 +6,9 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::{collections::HashMap, env::var};
 
-const AWS_CONFIG_FILE: &str = "AWS_CONFIG_FILE";
+const AWS_CONFIG_FILE_ENV_VAR_NAME: &str = "AWS_CONFIG_FILE";
 
-fn get_aws_config_file_path_from(env_variable_name: &str) -> Option<String> {
+fn try_get_env_variable_value_from(env_variable_name: &str) -> Option<String> {
     match var(env_variable_name) {
         Ok(value) => {
             if value.is_empty() {
@@ -24,15 +24,15 @@ fn get_aws_config_file_path_from(env_variable_name: &str) -> Option<String> {
 /// Default config file location:
 /// 1: if set and not empty, use the value from environment variable ```AWS_CONFIG_FILE```
 /// 2. otherwise return `~/.aws/config` (Linux/Mac) resp. `%USERPROFILE%\.aws\config` (Windows)
-pub fn default_config_location() -> Result<PathBuf, CredentialsError> {
-    let env = get_aws_config_file_path_from(AWS_CONFIG_FILE);
+pub fn get_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
+    let env = try_get_env_variable_value_from(AWS_CONFIG_FILE_ENV_VAR_NAME);
     match env {
         Some(path) => Ok(PathBuf::from(path)),
-        None => hardcoded_config_location(),
+        None => get_default_aws_config_file_path(),
     }
 }
 
-fn hardcoded_config_location() -> Result<PathBuf, CredentialsError> {
+fn get_default_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
     match home_dir() {
         Some(mut home_path) => {
             home_path.push(".aws");
@@ -204,8 +204,9 @@ pub fn parse_credentials_file(
 #[cfg(test)]
 mod tests {
 
-    use crate::get_aws_config_file_path_from;
+    use crate::try_get_env_variable_value_from;
     use std::path::Path;
+    use std::env::{set_var, remove_var};
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";
@@ -319,11 +320,27 @@ mod tests {
     }
 
     #[test]
-    fn get_aws_config_file_path_from_should_return_none_when_given_not_exist_env_variable() {
-        let result = get_aws_config_file_path_from(
+    fn try_get_env_variable_value_from_should_return_none_when_given_not_exist_variable_name() {
+        let result = try_get_env_variable_value_from(
             "some_nonsense_name_which_should_not_be_one_of_env_var_name",
         );
 
         assert_eq!(result, None);
+    }
+
+    #[test]
+    fn try_get_env_variable_value_from_should_return_value_when_given_existing_env_variable_name() {
+        let env_var_name = "some_nonsense_key_name_with_random_id_0x4567";
+        let env_var_value = "someValue";
+
+        set_var(env_var_name, env_var_value);
+
+        let result = try_get_env_variable_value_from(
+            env_var_name,
+        );
+
+        assert_eq!(result.unwrap(), env_var_value);
+
+        remove_var(env_var_name);
     }
 }

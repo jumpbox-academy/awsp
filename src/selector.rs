@@ -50,7 +50,7 @@ mod tests {
 }
 
 use crate::cmdline::Opt;
-use awsp::{default_config_location, parse_config_file};
+use awsp::{get_aws_config_file_path, parse_config_file};
 
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::env;
@@ -140,7 +140,7 @@ fn display_selected() {
 }
 
 fn profile_menu() {
-    let location = default_config_location().unwrap();
+    let location = get_aws_config_file_path().unwrap();
     let config_file = parse_config_file(location.as_path()).unwrap();
     let profile_list = to_key_list(&config_file);
     let profile_list = profile_list.as_slice();
