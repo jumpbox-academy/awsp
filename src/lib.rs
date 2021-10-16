@@ -49,14 +49,10 @@ fn get_default_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
 }
 
 pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<String, String>>> {
-    match fs::metadata(file_path) {
-        Err(_) => return None,
-        Ok(metadata) => {
-            if !metadata.is_file() {
-                return None;
-            }
-        }
-    };
+    if !file_path.is_file() {
+        return None;
+    }
+
     let profile_regex = new_profile_regex();
     let file = File::open(file_path).expect("expected file");
     let file_lines = BufReader::new(&file);
@@ -360,5 +356,12 @@ mod tests {
         let expected = format!("{}/.aws/config", home_dir);
 
         assert_eq!(result.unwrap(), PathBuf::from(expected));
+    }
+
+    #[test]
+    fn parse_config_file_should_return_none_when_given_path_is_not_exist() {
+        let result = parse_config_file(Path::new("some/nonsense/path"));
+
+        assert_eq!(result, None);
     }
 }
