@@ -53,7 +53,6 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
         return None;
     }
 
-    //let profile_regex = new_profile_regex();
     let file = File::open(file_path).expect("expected file");
     let reader = BufReader::new(&file);
 
@@ -64,15 +63,13 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
             if is_profile(&line) {
                 (result, get_profile_from(&line))
             } else {
-                match &line
-                    .splitn(2, '=')
-                    .map(|value| value.trim())
-                    .collect::<Vec<&str>>()[..]
-                {
-                    [key, value] if !key.is_empty() && !value.is_empty() => {
-                        if let Some(current) = profile.clone() {
-                            let values = result.entry(current).or_insert_with(HashMap::new);
-                            (*values).insert(key.to_string(), value.to_string());
+                match extract_config_from(&line) {
+                    (key, value) if !key.is_empty() && !value.is_empty() => {
+                        if let Some(current_profile_name) = profile.clone() {
+                            let current_profile = result
+                                .entry(current_profile_name)
+                                .or_insert_with(HashMap::new);
+                            (*current_profile).insert(key.to_string(), value.to_string());
                         }
                         (result, profile)
                     }
@@ -110,6 +107,15 @@ fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String>
 
 fn is_comment(to_check: &str) -> bool {
     to_check.starts_with('#')
+}
+
+fn extract_config_from(line: &str) -> (&str, &str) {
+    let config_map = line
+        .splitn(2, '=')
+        .map(|value| value.trim())
+        .collect::<Vec<&str>>();
+
+    (config_map[0], config_map[1])
 }
 
 pub fn parse_credentials_file(
