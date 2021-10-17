@@ -53,7 +53,7 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
         return None;
     }
 
-    let profile_regex = new_profile_regex();
+    //let profile_regex = new_profile_regex();
     let file = File::open(file_path).expect("expected file");
     let reader = BufReader::new(&file);
 
@@ -61,14 +61,12 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
         .lines()
         .filter_map(|line| try_get_config_line_from(line.ok()))
         .fold(Default::default(), |(mut result, profile), line| {
-            if profile_regex.is_match(&line) {
-                let caps = profile_regex.captures(&line).unwrap();
-                let next_profile = caps.get(2).map(|value| value.as_str().to_string());
-                (result, next_profile)
+            if is_profile(&line) {
+                (result, get_profile_from(&line))
             } else {
                 match &line
                     .splitn(2, '=')
-                    .map(|value| value.trim_matches(' '))
+                    .map(|value| value.trim())
                     .collect::<Vec<&str>>()[..]
                 {
                     [key, value] if !key.is_empty() && !value.is_empty() => {
@@ -82,11 +80,25 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
                 }
             }
         });
+
     Some(result.0)
+}
+
+fn is_profile(line: &str) -> bool {
+    let profile_regex = new_profile_regex();
+
+    profile_regex.is_match(line)
 }
 
 fn new_profile_regex() -> Regex {
     Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
+}
+
+fn get_profile_from(line: &str) -> Option<String> {
+    let profile_regex = new_profile_regex();
+    let caps = profile_regex.captures(&line).unwrap();
+
+    caps.get(2).map(|value| value.as_str().to_string())
 }
 
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
@@ -252,6 +264,7 @@ mod tests {
             .expect("No bar profile in multiple_profile_credentials");
         assert_eq!(bar_profile.get(REGION), Some(&"us-east-4".to_string()));
         assert_eq!(bar_profile.get("output"), Some(&"json".to_string()));
+        assert_eq!(bar_profile.contains_key("comments"), false);
     }
 
     #[test]
