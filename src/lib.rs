@@ -53,27 +53,34 @@ pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<Str
         return None;
     }
 
-    let file = File::open(file_path).expect("expected file");
-    let reader = BufReader::new(&file);
+    let config_file = File::open(file_path).expect("expected file");
+    let config_file_reader = BufReader::new(&config_file);
 
-    let result: (HashMap<String, HashMap<String, String>>, Option<String>) = reader
+    create_profile_config_map_from(config_file_reader)
+}
+
+fn create_profile_config_map_from(
+    config_file_reader: BufReader<&File>,
+) -> Option<HashMap<String, HashMap<String, String>>> {
+    let result: (HashMap<String, HashMap<String, String>>, Option<String>) = config_file_reader
         .lines()
         .filter_map(|line| try_get_config_line_from(line.ok()))
-        .fold(Default::default(), |(mut result, profile), line| {
+        .fold(Default::default(), |(config_map, profile), line| {
             if is_profile(&line) {
-                (result, get_profile_from(&line))
+                (config_map, get_profile_from(&line))
             } else {
                 match extract_config_from(&line) {
                     (key, value) if !key.is_empty() && !value.is_empty() => {
-                        if let Some(current_profile_name) = profile.clone() {
-                            let current_profile = result
-                                .entry(current_profile_name)
-                                .or_insert_with(HashMap::new);
-                            (*current_profile).insert(key.to_string(), value.to_string());
-                        }
-                        (result, profile)
+                        let config_map = insert_config_to_correspond_profile(
+                            key.to_string(),
+                            value.to_string(),
+                            profile.clone(),
+                            config_map,
+                        );
+
+                        (config_map, profile)
                     }
-                    _ => (result, profile),
+                    _ => (config_map, profile),
                 }
             }
         });
@@ -87,15 +94,15 @@ fn is_profile(line: &str) -> bool {
     profile_regex.is_match(line)
 }
 
-fn new_profile_regex() -> Regex {
-    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
-}
-
 fn get_profile_from(line: &str) -> Option<String> {
     let profile_regex = new_profile_regex();
     let caps = profile_regex.captures(&line).unwrap();
 
     caps.get(2).map(|value| value.as_str().to_string())
+}
+
+fn new_profile_regex() -> Regex {
+    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
@@ -116,6 +123,22 @@ fn extract_config_from(line: &str) -> (&str, &str) {
         .collect::<Vec<&str>>();
 
     (config_map[0], config_map[1])
+}
+
+fn insert_config_to_correspond_profile(
+    key: String,
+    value: String,
+    profile: Option<String>,
+    mut config_map: HashMap<String, HashMap<String, String>>,
+) -> HashMap<String, HashMap<String, String>> {
+    if let Some(current_profile_name) = profile {
+        let current_profile = config_map
+            .entry(current_profile_name)
+            .or_insert_with(HashMap::new);
+        (*current_profile).insert(key, value);
+    }
+
+    config_map
 }
 
 pub fn parse_credentials_file(
