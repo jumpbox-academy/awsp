@@ -1,3 +1,5 @@
+mod helper;
+
 use dirs::home_dir;
 use regex::Regex;
 use rusoto_credential::{AwsCredentials, CredentialsError};
@@ -48,6 +50,15 @@ fn get_default_aws_config_file_path() -> Result<PathBuf, CredentialsError> {
     }
 }
 
+/// Create profile -> configs map from target file.
+///
+/// # Argument
+///
+/// `file_path` - path to aws profile config
+///
+/// # Return value
+///
+/// `None` - If destination path is not a file otherwise return [profile -> configs] hashmap
 pub fn parse_config_file(file_path: &Path) -> Option<HashMap<String, HashMap<String, String>>> {
     if !file_path.is_file() {
         return None;
