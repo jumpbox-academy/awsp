@@ -1,5 +1,5 @@
+use crate::helper::file::{is_profile, new_profile_regex};
 use dirs::home_dir;
-use regex::Regex;
 use rusoto_credential::CredentialsError;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -99,21 +99,11 @@ fn _create_profile_config_map_from(
     Some(result.0)
 }
 
-fn is_profile(line: &str) -> bool {
-    let profile_regex = new_profile_regex();
-
-    profile_regex.is_match(line)
-}
-
 fn get_profile_from(line: &str) -> Option<String> {
     let profile_regex = new_profile_regex();
     let caps = profile_regex.captures(&line).unwrap();
 
     caps.get(2).map(|value| value.as_str().to_string())
-}
-
-fn new_profile_regex() -> Regex {
-    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
