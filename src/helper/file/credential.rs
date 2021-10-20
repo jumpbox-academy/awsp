@@ -6,36 +6,39 @@ use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 pub fn parse_credentials_file(
-    file_path: &Path,
+    credential_file_path: &Path,
 ) -> Result<HashMap<String, AwsCredentials>, CredentialsError> {
-    match fs::metadata(file_path) {
+    //credential_file_path.is_file()
+
+    match fs::metadata(credential_file_path) {
         Err(_) => {
             return Err(CredentialsError::new(format!(
                 "Couldn't stat credentials file: [ {:?} ]. Non existant, or no permission.",
-                file_path
+                credential_file_path
             )))
         }
         Ok(metadata) => {
             if !metadata.is_file() {
                 return Err(CredentialsError::new(format!(
                     "Credentials file: [ {:?} ] is not a file.",
-                    file_path
+                    credential_file_path
                 )));
             }
         }
     };
 
-    let file = File::open(file_path)?;
+    let credential_file = File::open(credential_file_path)?;
 
     let profile_regex = new_profile_regex();
+
     let mut profiles: HashMap<String, AwsCredentials> = HashMap::new();
     let mut access_key: Option<String> = None;
     let mut secret_key: Option<String> = None;
     let mut token: Option<String> = None;
     let mut profile_name: Option<String> = None;
 
-    let file_lines = BufReader::new(&file);
-    for (line_no, line) in file_lines.lines().enumerate() {
+    let credential_file_reader = BufReader::new(&credential_file);
+    for (line_no, line) in credential_file_reader.lines().enumerate() {
         let unwrapped_line: String =
             line.unwrap_or_else(|_| panic!("Failed to read credentials file, line: {}", line_no));
 
@@ -65,6 +68,7 @@ pub fn parse_credentials_file(
 
             let caps = profile_regex.captures(&unwrapped_line).unwrap();
             profile_name = Some(caps.get(2).unwrap().as_str().to_string());
+
             continue;
         }
 
