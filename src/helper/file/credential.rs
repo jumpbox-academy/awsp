@@ -1,5 +1,4 @@
-use crate::helper::file::is_comment;
-use regex::Regex;
+use crate::helper::file::{is_comment, is_profile, new_profile_regex};
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -30,8 +29,6 @@ pub fn parse_credentials_file(
 
     let credential_file = File::open(credential_file_path)?;
 
-    let profile_regex = new_profile_regex();
-
     let mut profiles: HashMap<String, AwsCredentials> = HashMap::new();
     let mut access_key: Option<String> = None;
     let mut secret_key: Option<String> = None;
@@ -54,7 +51,7 @@ pub fn parse_credentials_file(
         }
 
         // handle the opening of named profile blocks
-        if profile_regex.is_match(&unwrapped_line) {
+        if is_profile(&unwrapped_line) {
             if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
                 (profile_name, access_key, secret_key)
             {
@@ -67,7 +64,7 @@ pub fn parse_credentials_file(
             secret_key = None;
             token = None;
 
-            let caps = profile_regex.captures(&unwrapped_line).unwrap();
+            let caps = new_profile_regex().captures(&unwrapped_line).unwrap();
             profile_name = Some(caps.get(2).unwrap().as_str().to_string());
 
             continue;
@@ -79,12 +76,12 @@ pub fn parse_credentials_file(
         if lower_case_line.contains("aws_access_key_id") && access_key.is_none() {
             let v: Vec<&str> = unwrapped_line.split('=').collect();
             if !v.is_empty() {
-                access_key = Some(v[1].trim_matches(' ').to_string());
+                access_key = Some(v[1].trim().to_string());
             }
         } else if lower_case_line.contains("aws_secret_access_key") && secret_key.is_none() {
             let v: Vec<&str> = unwrapped_line.split('=').collect();
             if !v.is_empty() {
-                secret_key = Some(v[1].trim_matches(' ').to_string());
+                secret_key = Some(v[1].trim().to_string());
             }
         } else if lower_case_line.contains("aws_session_token") && token.is_none() {
             let v: Vec<&str> = unwrapped_line.split('=').collect();
@@ -95,7 +92,7 @@ pub fn parse_credentials_file(
             if token.is_none() {
                 let v: Vec<&str> = unwrapped_line.split('=').collect();
                 if !v.is_empty() {
-                    token = Some(v[1].trim_matches(' ').to_string());
+                    token = Some(v[1].trim().to_string());
                 }
             }
         } else {
@@ -117,10 +114,6 @@ pub fn parse_credentials_file(
     }
 
     Ok(profiles)
-}
-
-fn new_profile_regex() -> Regex {
-    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
 #[cfg(test)]
