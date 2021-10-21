@@ -1,4 +1,4 @@
-use crate::helper::file::{is_profile, new_profile_regex};
+use crate::helper::file::{is_comment, is_profile, new_profile_regex};
 use dirs::home_dir;
 use rusoto_credential::CredentialsError;
 use std::fs::File;
@@ -111,10 +111,6 @@ fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String>
         let line = line.trim().to_owned();
         !is_comment(&line) && !line.is_empty()
     })
-}
-
-fn is_comment(to_check: &str) -> bool {
-    to_check.starts_with('#')
 }
 
 fn extract_config_from(line: &str) -> (&str, &str) {

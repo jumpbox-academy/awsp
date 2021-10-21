@@ -1,3 +1,4 @@
+use crate::helper::file::is_comment;
 use regex::Regex;
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
@@ -48,7 +49,7 @@ pub fn parse_credentials_file(
         }
 
         // skip comments
-        if unwrapped_line.starts_with('#') {
+        if is_comment(&unwrapped_line) {
             continue;
         }
 
