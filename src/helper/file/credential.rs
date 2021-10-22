@@ -8,15 +8,7 @@ use std::path::Path;
 pub fn parse_credentials_file(
     credential_file_path: &Path,
 ) -> Result<HashMap<String, AwsCredentials>, CredentialsError> {
-    //credential_file_path.is_file()
-
     match fs::metadata(credential_file_path) {
-        Err(_) => {
-            return Err(CredentialsError::new(format!(
-                "Couldn't stat credentials file: [ {:?} ]. Non existant, or no permission.",
-                credential_file_path
-            )))
-        }
         Ok(metadata) => {
             if !metadata.is_file() {
                 return Err(CredentialsError::new(format!(
@@ -24,6 +16,12 @@ pub fn parse_credentials_file(
                     credential_file_path
                 )));
             }
+        }
+        Err(_) => {
+            return Err(CredentialsError::new(format!(
+                "Couldn't stat credentials file: [ {:?} ]. Non existant, or no permission.",
+                credential_file_path
+            )))
         }
     };
 
@@ -40,13 +38,17 @@ pub fn parse_credentials_file(
         let unwrapped_line: String =
             line.unwrap_or_else(|_| panic!("Failed to read credentials file, line: {}", line_no));
 
-        // skip empty lines
-        if unwrapped_line.is_empty() {
-            continue;
-        }
+        // match unwrapped_line {
+        //     line if line.is_empty() => {
+        //         continue;
+        //     }
+        //     line if is_comment( &line) => {
+        //         continue;
+        //     }
+        //     _ => { continue; }
+        // }
 
-        // skip comments
-        if is_comment(&unwrapped_line) {
+        if unwrapped_line.is_empty() || is_comment(&unwrapped_line) {
             continue;
         }
 
@@ -55,9 +57,10 @@ pub fn parse_credentials_file(
             if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
                 (profile_name, access_key, secret_key)
             {
-                let creds = AwsCredentials::new(access_key_value, secret_key_value, token, None);
+                let aws_credentials =
+                    AwsCredentials::new(access_key_value, secret_key_value, token, None);
 
-                profiles.insert(profile_name_value, creds);
+                profiles.insert(profile_name_value, aws_credentials);
             }
 
             access_key = None;
@@ -73,27 +76,15 @@ pub fn parse_credentials_file(
         // otherwise look for key=value pairs we care about
         let lower_case_line = unwrapped_line.to_ascii_lowercase().to_string();
 
-        if lower_case_line.contains("aws_access_key_id") && access_key.is_none() {
-            let v: Vec<&str> = unwrapped_line.split('=').collect();
-            if !v.is_empty() {
-                access_key = Some(v[1].trim().to_string());
-            }
+        if is_aws_access_key(&lower_case_line) && access_key.is_none() {
+            access_key = extract_value_from(&lower_case_line);
         } else if lower_case_line.contains("aws_secret_access_key") && secret_key.is_none() {
-            let v: Vec<&str> = unwrapped_line.split('=').collect();
-            if !v.is_empty() {
-                secret_key = Some(v[1].trim().to_string());
-            }
+            secret_key = extract_value_from(&lower_case_line);
         } else if lower_case_line.contains("aws_session_token") && token.is_none() {
-            let v: Vec<&str> = unwrapped_line.split('=').collect();
-            if !v.is_empty() {
-                token = Some(v[1].trim_matches(' ').to_string());
-            }
+            token = extract_value_from(&lower_case_line);
         } else if lower_case_line.contains("aws_security_token") {
             if token.is_none() {
-                let v: Vec<&str> = unwrapped_line.split('=').collect();
-                if !v.is_empty() {
-                    token = Some(v[1].trim().to_string());
-                }
+                token = extract_value_from(&lower_case_line);
             }
         } else {
             // Ignore unrecognized fields
@@ -114,6 +105,20 @@ pub fn parse_credentials_file(
     }
 
     Ok(profiles)
+}
+
+fn is_aws_access_key(line: &str) -> bool {
+    line.contains("aws_access_key_id")
+}
+
+fn extract_value_from(line: &str) -> Option<String> {
+    let v: Vec<&str> = line.split('=').collect();
+
+    if v.is_empty() {
+        None
+    } else {
+        Some(v[1].trim().to_string())
+    }
 }
 
 #[cfg(test)]
