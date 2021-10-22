@@ -27,7 +27,7 @@ pub fn parse_credentials_file(
 
     let credential_file = File::open(credential_file_path)?;
 
-    let mut profiles: HashMap<String, AwsCredentials> = HashMap::new();
+    let mut profile_credentials_map: HashMap<String, AwsCredentials> = HashMap::new();
     let mut access_key: Option<String> = None;
     let mut secret_key: Option<String> = None;
     let mut token: Option<String> = None;
@@ -54,14 +54,13 @@ pub fn parse_credentials_file(
 
         // handle the opening of named profile blocks
         if is_profile(&unwrapped_line) {
-            if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
-                (profile_name, access_key, secret_key)
-            {
-                let aws_credentials =
-                    AwsCredentials::new(access_key_value, secret_key_value, token, None);
-
-                profiles.insert(profile_name_value, aws_credentials);
-            }
+            profile_credentials_map = try_insert_profile_credential_to(
+                profile_credentials_map,
+                profile_name,
+                access_key,
+                secret_key,
+                token,
+            );
 
             access_key = None;
             secret_key = None;
@@ -92,19 +91,19 @@ pub fn parse_credentials_file(
         }
     }
 
-    if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
-        (profile_name, access_key, secret_key)
-    {
-        let creds = AwsCredentials::new(access_key_value, secret_key_value, token, None);
+    profile_credentials_map = try_insert_profile_credential_to(
+        profile_credentials_map,
+        profile_name,
+        access_key,
+        secret_key,
+        token,
+    );
 
-        profiles.insert(profile_name_value, creds);
-    }
-
-    if profiles.is_empty() {
+    if profile_credentials_map.is_empty() {
         return Err(CredentialsError::new("No credentials found."));
     }
 
-    Ok(profiles)
+    Ok(profile_credentials_map)
 }
 
 fn is_aws_access_key(line: &str) -> bool {
@@ -119,6 +118,24 @@ fn extract_value_from(line: &str) -> Option<String> {
     } else {
         Some(v[1].trim().to_string())
     }
+}
+
+fn try_insert_profile_credential_to(
+    mut profile_credentials_map: HashMap<String, AwsCredentials>,
+    profile_name: Option<String>,
+    access_key: Option<String>,
+    secret_key: Option<String>,
+    token: Option<String>,
+) -> HashMap<String, AwsCredentials> {
+    if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
+        (profile_name, access_key, secret_key)
+    {
+        let aws_credentials = AwsCredentials::new(access_key_value, secret_key_value, token, None);
+
+        profile_credentials_map.insert(profile_name_value, aws_credentials);
+    }
+
+    profile_credentials_map
 }
 
 #[cfg(test)]
