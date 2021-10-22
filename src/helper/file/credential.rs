@@ -1,4 +1,4 @@
-use crate::helper::file::{is_comment, is_profile, new_profile_regex};
+use crate::helper::file::{get_profile_name_from, is_comment, is_profile};
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -38,16 +38,6 @@ pub fn parse_credentials_file(
         let unwrapped_line: String =
             line.unwrap_or_else(|_| panic!("Failed to read credentials file, line: {}", line_no));
 
-        // match unwrapped_line {
-        //     line if line.is_empty() => {
-        //         continue;
-        //     }
-        //     line if is_comment( &line) => {
-        //         continue;
-        //     }
-        //     _ => { continue; }
-        // }
-
         if unwrapped_line.is_empty() || is_comment(&unwrapped_line) {
             continue;
         }
@@ -66,8 +56,7 @@ pub fn parse_credentials_file(
             secret_key = None;
             token = None;
 
-            let caps = new_profile_regex().captures(&unwrapped_line).unwrap();
-            profile_name = Some(caps.get(2).unwrap().as_str().to_string());
+            profile_name = get_profile_name_from(&unwrapped_line);
 
             continue;
         }
@@ -130,9 +119,10 @@ fn try_insert_profile_credential_to(
     if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
         (profile_name, access_key, secret_key)
     {
-        let aws_credentials = AwsCredentials::new(access_key_value, secret_key_value, token, None);
-
-        profile_credentials_map.insert(profile_name_value, aws_credentials);
+        profile_credentials_map.insert(
+            profile_name_value,
+            AwsCredentials::new(access_key_value, secret_key_value, token, None),
+        );
     }
 
     profile_credentials_map

@@ -10,6 +10,13 @@ pub fn is_profile(line: &str) -> bool {
     profile_regex.is_match(line)
 }
 
+fn get_profile_name_from(line: &str) -> Option<String> {
+    let profile_regex = new_profile_regex();
+    let caps = profile_regex.captures(&line).unwrap();
+
+    caps.get(2).map(|value| value.as_str().to_string())
+}
+
 fn new_profile_regex() -> Regex {
     Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }

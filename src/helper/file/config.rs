@@ -1,4 +1,4 @@
-use crate::helper::file::{is_comment, is_profile, new_profile_regex};
+use crate::helper::file::{get_profile_name_from, is_comment, is_profile};
 use dirs::home_dir;
 use rusoto_credential::CredentialsError;
 use std::fs::File;
@@ -78,7 +78,7 @@ fn _create_profile_config_map_from(
         .filter_map(|line| try_get_config_line_from(line.ok()))
         .fold(Default::default(), |(config_map, profile), line| {
             if is_profile(&line) {
-                (config_map, get_profile_from(&line))
+                (config_map, get_profile_name_from(&line))
             } else {
                 match extract_config_from(&line) {
                     (key, value) if !key.is_empty() && !value.is_empty() => {
@@ -97,13 +97,6 @@ fn _create_profile_config_map_from(
         });
 
     Some(result.0)
-}
-
-fn get_profile_from(line: &str) -> Option<String> {
-    let profile_regex = new_profile_regex();
-    let caps = profile_regex.captures(&line).unwrap();
-
-    caps.get(2).map(|value| value.as_str().to_string())
 }
 
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
