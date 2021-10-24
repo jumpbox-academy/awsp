@@ -1,10 +1,11 @@
 use std::collections::HashMap;
-use std::fs::{self, File};
-use std::io::{BufRead, BufReader};
+use std::fs::{self};
+use std::io::BufRead;
 use std::path::Path;
 
 use rusoto_credential::{AwsCredentials, CredentialsError};
 
+use crate::file::create_file_reader_for;
 use crate::file::credential::aws_profile_credential::AwsProfileCredential;
 use crate::file::helper::line::{extract_value_from, is_comment_or_empty};
 use crate::file::helper::line::{get_profile_name_from, is_profile};
@@ -52,7 +53,7 @@ fn is_valid_file_path(credential_file_path: &Path) -> Result<(), CredentialsErro
 fn create_profile_credentials_map_from(
     credential_file_path: &Path,
 ) -> HashMap<String, AwsCredentials> {
-    let credential_file_reader = create_file_reader_from(credential_file_path);
+    let credential_file_reader = create_file_reader_for(credential_file_path);
 
     let mut profile_credentials_map: HashMap<String, AwsCredentials> = HashMap::new();
     let mut aws_profile_credential = AwsProfileCredential::new();
@@ -83,19 +84,6 @@ fn create_profile_credentials_map_from(
         try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
     profile_credentials_map
-}
-
-fn create_file_reader_from(credential_file_path: &Path) -> BufReader<File> {
-    let credential_file = File::open(credential_file_path).unwrap_or_else(|_| {
-        panic!(
-            "Failed to open file, path: {}",
-            credential_file_path
-                .to_str()
-                .expect("Credential file path is not valid unicode.")
-        )
-    });
-
-    BufReader::new(credential_file)
 }
 
 fn try_assign_aws_profile_credential_from(

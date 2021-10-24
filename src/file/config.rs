@@ -6,6 +6,7 @@ use std::{collections::HashMap, env::var};
 use dirs::home_dir;
 use rusoto_credential::CredentialsError;
 
+use crate::file::create_file_reader_for;
 use crate::file::helper::line::{extract_config_from, is_comment_or_empty};
 use crate::file::helper::line::{get_profile_name_from, is_profile};
 
@@ -67,14 +68,13 @@ pub fn create_profile_config_map_from(
         return None;
     }
 
-    let config_file = File::open(config_file_path).expect("expected file");
-    let config_file_reader = BufReader::new(&config_file);
+    let config_file_reader = create_file_reader_for(config_file_path);
 
     _create_profile_config_map_from(config_file_reader)
 }
 
 fn _create_profile_config_map_from(
-    config_file_reader: BufReader<&File>,
+    config_file_reader: BufReader<File>,
 ) -> Option<HashMap<String, HashMap<String, String>>> {
     let result: (HashMap<String, HashMap<String, String>>, Option<String>) = config_file_reader
         .lines()
