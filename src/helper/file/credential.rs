@@ -22,13 +22,19 @@ impl AwsProfileCredential {
         }
     }
 
+    fn new_with_profile_name(profile_name: String) -> AwsProfileCredential {
+        AwsProfileCredential {
+            profile_name: Some(profile_name),
+            access_key: None,
+            secret_key: None,
+            token: None,
+        }
+    }
+
     fn into_aws_credential(self) -> Option<AwsCredentials> {
         if let (Some(access_key), Some(secret_key)) = (self.access_key, self.secret_key) {
             return Some(AwsCredentials::new(
-                access_key,
-                secret_key,
-                self.token,
-                None,
+                access_key, secret_key, self.token, None,
             ));
         }
 
@@ -50,18 +56,37 @@ pub fn parse_credentials_file(
         }
         Err(_) => {
             return Err(CredentialsError::new(format!(
-                "Couldn't stat credentials file: [ {:?} ]. Non existant, or no permission.",
+                "Couldn't stat credentials file: [ {:?} ]. Non existent, or no permission.",
                 credential_file_path
             )))
         }
     };
 
-    let credential_file = File::open(credential_file_path)?;
+    let profile_credentials_map = create_profile_credentials_map_from(credential_file_path);
+
+    if profile_credentials_map.is_empty() {
+        return Err(CredentialsError::new("No credentials found."));
+    }
+
+    Ok(profile_credentials_map)
+}
+
+fn create_profile_credentials_map_from(
+    credential_file_path: &Path,
+) -> HashMap<String, AwsCredentials> {
+    let credential_file = File::open(credential_file_path).unwrap_or_else(|_| {
+        panic!(
+            "Failed to open file, path: {}",
+            credential_file_path
+                .to_str()
+                .expect("Credential file path is not valid unicode.")
+        )
+    });
+    let credential_file_reader = BufReader::new(&credential_file);
 
     let mut profile_credentials_map: HashMap<String, AwsCredentials> = HashMap::new();
     let mut aws_profile_credential = AwsProfileCredential::new();
 
-    let credential_file_reader = BufReader::new(&credential_file);
     for (line_no, line) in credential_file_reader.lines().enumerate() {
         let unwrapped_line: String =
             line.unwrap_or_else(|_| panic!("Failed to read credentials file, line: {}", line_no));
@@ -75,8 +100,10 @@ pub fn parse_credentials_file(
             profile_credentials_map =
                 try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
-            aws_profile_credential = AwsProfileCredential::new();
-            aws_profile_credential.profile_name = get_profile_name_from(&unwrapped_line);
+            aws_profile_credential = AwsProfileCredential::new_with_profile_name(
+                get_profile_name_from(&unwrapped_line)
+                    .unwrap_or_else(|| panic!("Cannot get profile name, line: {}", line_no)),
+            );
 
             continue;
         }
@@ -107,11 +134,7 @@ pub fn parse_credentials_file(
     profile_credentials_map =
         try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
-    if profile_credentials_map.is_empty() {
-        return Err(CredentialsError::new("No credentials found."));
-    }
-
-    Ok(profile_credentials_map)
+    profile_credentials_map
 }
 
 fn is_aws_access_key(line: &str) -> bool {
