@@ -42,3 +42,40 @@ impl AwsProfileCredential {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn into_aws_credential_should_return_aws_credential_when_both_access_key_and_secret_key_are_exist(
+    ) {
+        let access_key = "access_key";
+        let secret_key = "secret_key";
+
+        let aws_profile_credential = AwsProfileCredential {
+            profile_name: None,
+            access_key: Some(access_key.into()),
+            secret_key: Some(secret_key.into()),
+            token: None,
+        };
+
+        let result = aws_profile_credential.into_aws_credential().unwrap();
+        let expected = AwsCredentials::new(access_key, secret_key, None, None);
+
+        assert_eq!(expected.aws_access_key_id(), result.aws_access_key_id());
+        assert_eq!(
+            expected.aws_secret_access_key(),
+            result.aws_secret_access_key()
+        );
+        assert_eq!(expected.token(), result.token());
+    }
+
+    #[test]
+    fn into_aws_credential_should_return_none_when_either_or_both_access_key_and_secret_key_are_none(
+    ) {
+        let aws_profile_credential = AwsProfileCredential::new();
+
+        assert!(aws_profile_credential.into_aws_credential().is_none());
+    }
+}
