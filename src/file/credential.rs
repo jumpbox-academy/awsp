@@ -1,3 +1,5 @@
+pub mod aws_profile_credential;
+
 use std::collections::HashMap;
 use std::fs::{self};
 use std::io::BufRead;
@@ -9,8 +11,6 @@ use crate::file::create_file_reader_for;
 use crate::file::credential::aws_profile_credential::AwsProfileCredential;
 use crate::file::helper::line::{extract_value_from, is_comment_or_empty};
 use crate::file::helper::line::{get_profile_name_from, is_profile};
-
-pub mod aws_profile_credential;
 
 pub fn parse_credentials_file(
     credential_file_path: &Path,
