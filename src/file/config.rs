@@ -1,10 +1,14 @@
-use dirs::home_dir;
-use regex::Regex;
-use rusoto_credential::CredentialsError;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::{collections::HashMap, env::var};
+
+use dirs::home_dir;
+use rusoto_credential::CredentialsError;
+
+use crate::file::create_file_reader_for;
+use crate::file::helper::line::{extract_config_from, is_comment_or_empty};
+use crate::file::helper::line::{get_profile_name_from, is_profile};
 
 const AWS_CONFIG_FILE_ENV_VAR_NAME: &str = "AWS_CONFIG_FILE";
 const DEFAULT_AWS_CONFIG_FILE_PATH: &str = ".aws/config";
@@ -64,21 +68,20 @@ pub fn create_profile_config_map_from(
         return None;
     }
 
-    let config_file = File::open(config_file_path).expect("expected file");
-    let config_file_reader = BufReader::new(&config_file);
+    let config_file_reader = create_file_reader_for(config_file_path);
 
     _create_profile_config_map_from(config_file_reader)
 }
 
 fn _create_profile_config_map_from(
-    config_file_reader: BufReader<&File>,
+    config_file_reader: BufReader<File>,
 ) -> Option<HashMap<String, HashMap<String, String>>> {
     let result: (HashMap<String, HashMap<String, String>>, Option<String>) = config_file_reader
         .lines()
         .filter_map(|line| try_get_config_line_from(line.ok()))
         .fold(Default::default(), |(config_map, profile), line| {
             if is_profile(&line) {
-                (config_map, get_profile_from(&line))
+                (config_map, get_profile_name_from(&line))
             } else {
                 match extract_config_from(&line) {
                     (key, value) if !key.is_empty() && !value.is_empty() => {
@@ -99,41 +102,11 @@ fn _create_profile_config_map_from(
     Some(result.0)
 }
 
-fn is_profile(line: &str) -> bool {
-    let profile_regex = new_profile_regex();
-
-    profile_regex.is_match(line)
-}
-
-fn get_profile_from(line: &str) -> Option<String> {
-    let profile_regex = new_profile_regex();
-    let caps = profile_regex.captures(&line).unwrap();
-
-    caps.get(2).map(|value| value.as_str().to_string())
-}
-
-fn new_profile_regex() -> Regex {
-    Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
-}
-
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
     maybe_config_line.filter(|line| {
         let line = line.trim().to_owned();
-        !is_comment(&line) && !line.is_empty()
+        !is_comment_or_empty(&line)
     })
-}
-
-fn is_comment(to_check: &str) -> bool {
-    to_check.starts_with('#')
-}
-
-fn extract_config_from(line: &str) -> (&str, &str) {
-    let config_map = line
-        .splitn(2, '=')
-        .map(|value| value.trim())
-        .collect::<Vec<&str>>();
-
-    (config_map[0], config_map[1])
 }
 
 fn insert_config_to_correspond_profile(
@@ -154,10 +127,10 @@ fn insert_config_to_correspond_profile(
 
 #[cfg(test)]
 mod tests {
-
-    use super::*;
     use std::env::{remove_var, set_var};
     use std::path::Path;
+
+    use super::*;
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";
