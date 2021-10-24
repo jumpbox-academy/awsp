@@ -18,6 +18,10 @@ fn new_profile_regex() -> Regex {
     Regex::new(r"^\[(profile )?([^\]]+)\]$").expect("Failed to compile regex")
 }
 
+pub fn is_comment_or_empty(line: &str) -> bool {
+    line.is_empty() || is_comment(line)
+}
+
 pub fn is_comment(to_check: &str) -> bool {
     to_check.starts_with('#')
 }

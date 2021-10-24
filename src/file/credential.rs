@@ -6,7 +6,7 @@ use std::path::Path;
 use rusoto_credential::{AwsCredentials, CredentialsError};
 
 use crate::file::credential::aws_profile_credential::AwsProfileCredential;
-use crate::file::helper::line::is_comment;
+use crate::file::helper::line::is_comment_or_empty;
 use crate::file::helper::line::{get_profile_name_from, is_profile};
 
 pub mod aws_profile_credential;
@@ -96,10 +96,6 @@ fn create_file_reader_from(credential_file_path: &Path) -> BufReader<File> {
     });
 
     BufReader::new(credential_file)
-}
-
-fn is_comment_or_empty(line: &str) -> bool {
-    line.is_empty() || is_comment(line)
 }
 
 fn try_assign_aws_profile_credential_from(

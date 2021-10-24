@@ -6,7 +6,7 @@ use std::{collections::HashMap, env::var};
 use dirs::home_dir;
 use rusoto_credential::CredentialsError;
 
-use crate::file::helper::line::is_comment;
+use crate::file::helper::line::is_comment_or_empty;
 use crate::file::helper::line::{get_profile_name_from, is_profile};
 
 const AWS_CONFIG_FILE_ENV_VAR_NAME: &str = "AWS_CONFIG_FILE";
@@ -105,7 +105,7 @@ fn _create_profile_config_map_from(
 fn try_get_config_line_from(maybe_config_line: Option<String>) -> Option<String> {
     maybe_config_line.filter(|line| {
         let line = line.trim().to_owned();
-        !is_comment(&line) && !line.is_empty()
+        !is_comment_or_empty(&line)
     })
 }
 
