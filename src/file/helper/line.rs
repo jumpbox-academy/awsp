@@ -26,6 +26,25 @@ pub fn is_comment(to_check: &str) -> bool {
     to_check.starts_with('#')
 }
 
+pub fn extract_config_from(line: &str) -> (&str, &str) {
+    let config_map = line
+        .splitn(2, '=')
+        .map(|value| value.trim())
+        .collect::<Vec<&str>>();
+
+    (config_map[0], config_map[1])
+}
+
+pub fn extract_value_from(line: &str) -> Option<String> {
+    let (_key, value) = extract_config_from(line);
+
+    if value.is_empty() {
+        None
+    } else {
+        Some(value.into())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

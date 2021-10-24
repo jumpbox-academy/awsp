@@ -6,7 +6,7 @@ use std::path::Path;
 use rusoto_credential::{AwsCredentials, CredentialsError};
 
 use crate::file::credential::aws_profile_credential::AwsProfileCredential;
-use crate::file::helper::line::is_comment_or_empty;
+use crate::file::helper::line::{extract_value_from, is_comment_or_empty};
 use crate::file::helper::line::{get_profile_name_from, is_profile};
 
 pub mod aws_profile_credential;
@@ -125,16 +125,6 @@ fn is_aws_secret_key(line: &str) -> bool {
 
 fn is_aws_token(line: &str) -> bool {
     line.contains("aws_session_token") || line.contains("aws_security_token")
-}
-
-fn extract_value_from(line: &str) -> Option<String> {
-    let v: Vec<&str> = line.split('=').collect();
-
-    if v.is_empty() {
-        None
-    } else {
-        Some(v[1].trim().to_string())
-    }
 }
 
 fn try_insert_profile_credential_to(
