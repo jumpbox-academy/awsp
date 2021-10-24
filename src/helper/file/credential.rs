@@ -13,17 +13,26 @@ struct AwsProfileCredential {
 }
 
 impl AwsProfileCredential {
-    fn into_aws_credential(&self) -> Option<AwsCredentials> {
-        if let (Some(access_key), Some(secret_key)) = (&self.access_key, &self.secret_key) {
+    fn new() -> AwsProfileCredential {
+        AwsProfileCredential {
+            profile_name: None,
+            access_key: None,
+            secret_key: None,
+            token: None,
+        }
+    }
+
+    fn into_aws_credential(self) -> Option<AwsCredentials> {
+        if let (Some(access_key), Some(secret_key)) = (self.access_key, self.secret_key) {
             return Some(AwsCredentials::new(
                 access_key,
                 secret_key,
-                self.token.clone(),
+                self.token,
                 None,
             ));
         }
 
-        return None;
+        None
     }
 }
 
@@ -50,10 +59,7 @@ pub fn parse_credentials_file(
     let credential_file = File::open(credential_file_path)?;
 
     let mut profile_credentials_map: HashMap<String, AwsCredentials> = HashMap::new();
-    let mut access_key: Option<String> = None;
-    let mut secret_key: Option<String> = None;
-    let mut token: Option<String> = None;
-    let mut profile_name: Option<String> = None;
+    let mut aws_profile_credential = AwsProfileCredential::new();
 
     let credential_file_reader = BufReader::new(&credential_file);
     for (line_no, line) in credential_file_reader.lines().enumerate() {
@@ -66,19 +72,11 @@ pub fn parse_credentials_file(
 
         // handle the opening of named profile blocks
         if is_profile(&unwrapped_line) {
-            profile_credentials_map = try_insert_profile_credential_to(
-                profile_credentials_map,
-                profile_name,
-                access_key,
-                secret_key,
-                token,
-            );
+            profile_credentials_map =
+                try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
-            profile_name = get_profile_name_from(&unwrapped_line);
-
-            access_key = None;
-            secret_key = None;
-            token = None;
+            aws_profile_credential = AwsProfileCredential::new();
+            aws_profile_credential.profile_name = get_profile_name_from(&unwrapped_line);
 
             continue;
         }
@@ -86,15 +84,19 @@ pub fn parse_credentials_file(
         // otherwise look for key=value pairs we care about
         let lower_case_line = unwrapped_line.to_ascii_lowercase().to_string();
 
-        if is_aws_access_key(&lower_case_line) && access_key.is_none() {
-            access_key = extract_value_from(&lower_case_line);
-        } else if lower_case_line.contains("aws_secret_access_key") && secret_key.is_none() {
-            secret_key = extract_value_from(&lower_case_line);
-        } else if lower_case_line.contains("aws_session_token") && token.is_none() {
-            token = extract_value_from(&lower_case_line);
+        if is_aws_access_key(&lower_case_line) && aws_profile_credential.access_key.is_none() {
+            aws_profile_credential.access_key = extract_value_from(&lower_case_line);
+        } else if lower_case_line.contains("aws_secret_access_key")
+            && aws_profile_credential.secret_key.is_none()
+        {
+            aws_profile_credential.secret_key = extract_value_from(&lower_case_line);
+        } else if lower_case_line.contains("aws_session_token")
+            && aws_profile_credential.token.is_none()
+        {
+            aws_profile_credential.token = extract_value_from(&lower_case_line);
         } else if lower_case_line.contains("aws_security_token") {
-            if token.is_none() {
-                token = extract_value_from(&lower_case_line);
+            if aws_profile_credential.token.is_none() {
+                aws_profile_credential.token = extract_value_from(&lower_case_line);
             }
         } else {
             // Ignore unrecognized fields
@@ -102,13 +104,8 @@ pub fn parse_credentials_file(
         }
     }
 
-    profile_credentials_map = try_insert_profile_credential_to(
-        profile_credentials_map,
-        profile_name,
-        access_key,
-        secret_key,
-        token,
-    );
+    profile_credentials_map =
+        try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
     if profile_credentials_map.is_empty() {
         return Err(CredentialsError::new("No credentials found."));
@@ -133,18 +130,13 @@ fn extract_value_from(line: &str) -> Option<String> {
 
 fn try_insert_profile_credential_to(
     mut profile_credentials_map: HashMap<String, AwsCredentials>,
-    profile_name: Option<String>,
-    access_key: Option<String>,
-    secret_key: Option<String>,
-    token: Option<String>,
+    aws_profile_credential: AwsProfileCredential,
 ) -> HashMap<String, AwsCredentials> {
-    if let (Some(profile_name_value), Some(access_key_value), Some(secret_key_value)) =
-        (profile_name, access_key, secret_key)
-    {
-        profile_credentials_map.insert(
-            profile_name_value,
-            AwsCredentials::new(access_key_value, secret_key_value, token, None),
-        );
+    if let (Some(profile_name), Some(aws_credential)) = (
+        aws_profile_credential.profile_name.clone(),
+        aws_profile_credential.into_aws_credential(),
+    ) {
+        profile_credentials_map.insert(profile_name, aws_credential);
     }
 
     profile_credentials_map
