@@ -74,15 +74,7 @@ pub fn parse_credentials_file(
 fn create_profile_credentials_map_from(
     credential_file_path: &Path,
 ) -> HashMap<String, AwsCredentials> {
-    let credential_file = File::open(credential_file_path).unwrap_or_else(|_| {
-        panic!(
-            "Failed to open file, path: {}",
-            credential_file_path
-                .to_str()
-                .expect("Credential file path is not valid unicode.")
-        )
-    });
-    let credential_file_reader = BufReader::new(&credential_file);
+    let credential_file_reader = create_file_reader_from(credential_file_path);
 
     let mut profile_credentials_map: HashMap<String, AwsCredentials> = HashMap::new();
     let mut aws_profile_credential = AwsProfileCredential::new();
@@ -91,11 +83,10 @@ fn create_profile_credentials_map_from(
         let unwrapped_line: String =
             line.unwrap_or_else(|_| panic!("Failed to read credentials file, line: {}", line_no));
 
-        if unwrapped_line.is_empty() || is_comment(&unwrapped_line) {
+        if is_comment_or_empty(&unwrapped_line) {
             continue;
         }
 
-        // handle the opening of named profile blocks
         if is_profile(&unwrapped_line) {
             profile_credentials_map =
                 try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
@@ -104,30 +95,9 @@ fn create_profile_credentials_map_from(
                 get_profile_name_from(&unwrapped_line)
                     .unwrap_or_else(|| panic!("Cannot get profile name, line: {}", line_no)),
             );
-
-            continue;
-        }
-
-        // otherwise look for key=value pairs we care about
-        let lower_case_line = unwrapped_line.to_ascii_lowercase().to_string();
-
-        if is_aws_access_key(&lower_case_line) && aws_profile_credential.access_key.is_none() {
-            aws_profile_credential.access_key = extract_value_from(&lower_case_line);
-        } else if lower_case_line.contains("aws_secret_access_key")
-            && aws_profile_credential.secret_key.is_none()
-        {
-            aws_profile_credential.secret_key = extract_value_from(&lower_case_line);
-        } else if lower_case_line.contains("aws_session_token")
-            && aws_profile_credential.token.is_none()
-        {
-            aws_profile_credential.token = extract_value_from(&lower_case_line);
-        } else if lower_case_line.contains("aws_security_token") {
-            if aws_profile_credential.token.is_none() {
-                aws_profile_credential.token = extract_value_from(&lower_case_line);
-            }
         } else {
-            // Ignore unrecognized fields
-            continue;
+            aws_profile_credential =
+                try_assign_aws_profile_credential_from(&unwrapped_line, aws_profile_credential);
         }
     }
 
@@ -135,6 +105,48 @@ fn create_profile_credentials_map_from(
         try_insert_profile_credential_to(profile_credentials_map, aws_profile_credential);
 
     profile_credentials_map
+}
+
+fn create_file_reader_from(credential_file_path: &Path) -> BufReader<File> {
+    let credential_file = File::open(credential_file_path).unwrap_or_else(|_| {
+        panic!(
+            "Failed to open file, path: {}",
+            credential_file_path
+                .to_str()
+                .expect("Credential file path is not valid unicode.")
+        )
+    });
+
+    BufReader::new(credential_file)
+}
+
+fn is_comment_or_empty(line: &str) -> bool {
+    line.is_empty() || is_comment(line)
+}
+
+fn try_assign_aws_profile_credential_from(
+    line: &str,
+    mut aws_profile_credential: AwsProfileCredential,
+) -> AwsProfileCredential {
+    let lower_case_line = line.to_ascii_lowercase();
+
+    if is_aws_access_key(&lower_case_line) && aws_profile_credential.access_key.is_none() {
+        aws_profile_credential.access_key = extract_value_from(&lower_case_line);
+    } else if lower_case_line.contains("aws_secret_access_key")
+        && aws_profile_credential.secret_key.is_none()
+    {
+        aws_profile_credential.secret_key = extract_value_from(&lower_case_line);
+    } else if lower_case_line.contains("aws_session_token")
+        && aws_profile_credential.token.is_none()
+    {
+        aws_profile_credential.token = extract_value_from(&lower_case_line);
+    } else if lower_case_line.contains("aws_security_token") {
+        if aws_profile_credential.token.is_none() {
+            aws_profile_credential.token = extract_value_from(&lower_case_line);
+        }
+    }
+
+    aws_profile_credential
 }
 
 fn is_aws_access_key(line: &str) -> bool {
