@@ -45,6 +45,21 @@ impl AwsProfileCredential {
 pub fn parse_credentials_file(
     credential_file_path: &Path,
 ) -> Result<HashMap<String, AwsCredentials>, CredentialsError> {
+    match is_valid_file_path(credential_file_path) {
+        Ok(_) => {
+            let profile_credentials_map = create_profile_credentials_map_from(credential_file_path);
+
+            if profile_credentials_map.is_empty() {
+                return Err(CredentialsError::new("No credentials found."));
+            }
+
+            Ok(profile_credentials_map)
+        }
+        Err(e) => Err(e),
+    }
+}
+
+fn is_valid_file_path(credential_file_path: &Path) -> Result<(), CredentialsError> {
     match fs::metadata(credential_file_path) {
         Ok(metadata) => {
             if !metadata.is_file() {
@@ -62,13 +77,7 @@ pub fn parse_credentials_file(
         }
     };
 
-    let profile_credentials_map = create_profile_credentials_map_from(credential_file_path);
-
-    if profile_credentials_map.is_empty() {
-        return Err(CredentialsError::new("No credentials found."));
-    }
-
-    Ok(profile_credentials_map)
+    Ok(())
 }
 
 fn create_profile_credentials_map_from(
