@@ -132,18 +132,10 @@ fn try_assign_aws_profile_credential_from(
 
     if is_aws_access_key(&lower_case_line) && aws_profile_credential.access_key.is_none() {
         aws_profile_credential.access_key = extract_value_from(&lower_case_line);
-    } else if lower_case_line.contains("aws_secret_access_key")
-        && aws_profile_credential.secret_key.is_none()
-    {
+    } else if is_aws_secret_key(&lower_case_line) && aws_profile_credential.secret_key.is_none() {
         aws_profile_credential.secret_key = extract_value_from(&lower_case_line);
-    } else if lower_case_line.contains("aws_session_token")
-        && aws_profile_credential.token.is_none()
-    {
+    } else if is_aws_token(&lower_case_line) && aws_profile_credential.token.is_none() {
         aws_profile_credential.token = extract_value_from(&lower_case_line);
-    } else if lower_case_line.contains("aws_security_token") {
-        if aws_profile_credential.token.is_none() {
-            aws_profile_credential.token = extract_value_from(&lower_case_line);
-        }
     }
 
     aws_profile_credential
@@ -151,6 +143,14 @@ fn try_assign_aws_profile_credential_from(
 
 fn is_aws_access_key(line: &str) -> bool {
     line.contains("aws_access_key_id")
+}
+
+fn is_aws_secret_key(line: &str) -> bool {
+    line.contains("aws_secret_access_key")
+}
+
+fn is_aws_token(line: &str) -> bool {
+    line.contains("aws_session_token") || line.contains("aws_security_token")
 }
 
 fn extract_value_from(line: &str) -> Option<String> {
