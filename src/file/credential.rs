@@ -1,12 +1,15 @@
-pub mod aws_profile_credential;
-
-use crate::file::credential::aws_profile_credential::AwsProfileCredential;
-use crate::file::{get_profile_name_from, is_comment, is_profile};
-use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
+
+use rusoto_credential::{AwsCredentials, CredentialsError};
+
+use crate::file::credential::aws_profile_credential::AwsProfileCredential;
+use crate::file::helper::line::is_comment;
+use crate::file::helper::line::{get_profile_name_from, is_profile};
+
+pub mod aws_profile_credential;
 
 pub fn parse_credentials_file(
     credential_file_path: &Path,
@@ -154,9 +157,9 @@ fn try_insert_profile_credential_to(
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
 
     use crate::file::config::create_profile_config_map_from;
-    use std::path::Path;
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";

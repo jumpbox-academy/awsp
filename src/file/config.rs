@@ -1,10 +1,13 @@
-use crate::file::{get_profile_name_from, is_comment, is_profile};
-use dirs::home_dir;
-use rusoto_credential::CredentialsError;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 use std::{collections::HashMap, env::var};
+
+use dirs::home_dir;
+use rusoto_credential::CredentialsError;
+
+use crate::file::helper::line::is_comment;
+use crate::file::helper::line::{get_profile_name_from, is_profile};
 
 const AWS_CONFIG_FILE_ENV_VAR_NAME: &str = "AWS_CONFIG_FILE";
 const DEFAULT_AWS_CONFIG_FILE_PATH: &str = ".aws/config";
@@ -133,10 +136,10 @@ fn insert_config_to_correspond_profile(
 
 #[cfg(test)]
 mod tests {
-
-    use super::*;
     use std::env::{remove_var, set_var};
     use std::path::Path;
+
+    use super::*;
 
     const DEFAULT: &str = "default";
     const REGION: &str = "region";
