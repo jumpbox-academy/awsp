@@ -1,4 +1,4 @@
-use crate::helper::file::{get_profile_name_from, is_comment, is_profile};
+use crate::file::{get_profile_name_from, is_comment, is_profile};
 use dirs::home_dir;
 use rusoto_credential::CredentialsError;
 use std::fs::File;

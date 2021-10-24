@@ -52,7 +52,7 @@ mod tests {
 
 use crate::cmdline::Opt;
 
-use awsp::helper::file::config::{create_profile_config_map_from, get_aws_config_file_path};
+use awsp::file::config::{create_profile_config_map_from, get_aws_config_file_path};
 
 use dialoguer::{theme::ColorfulTheme, Select};
 use std::env;

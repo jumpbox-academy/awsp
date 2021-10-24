@@ -1,7 +1,7 @@
 pub mod aws_profile_credential;
 
-use crate::helper::file::credential::aws_profile_credential::AwsProfileCredential;
-use crate::helper::file::{get_profile_name_from, is_comment, is_profile};
+use crate::file::credential::aws_profile_credential::AwsProfileCredential;
+use crate::file::{get_profile_name_from, is_comment, is_profile};
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
 use std::fs::{self, File};
@@ -155,7 +155,7 @@ fn try_insert_profile_credential_to(
 #[cfg(test)]
 mod tests {
 
-    use crate::helper::file::config::create_profile_config_map_from;
+    use crate::file::config::create_profile_config_map_from;
     use std::path::Path;
 
     const DEFAULT: &str = "default";
