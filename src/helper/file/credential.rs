@@ -5,6 +5,28 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
+struct AwsProfileCredential {
+    pub profile_name: Option<String>,
+    pub access_key: Option<String>,
+    pub secret_key: Option<String>,
+    pub token: Option<String>,
+}
+
+impl AwsProfileCredential {
+    fn into_aws_credential(&self) -> Option<AwsCredentials> {
+        if let (Some(access_key), Some(secret_key)) = (&self.access_key, &self.secret_key) {
+            return Some(AwsCredentials::new(
+                access_key,
+                secret_key,
+                self.token.clone(),
+                None,
+            ));
+        }
+
+        return None;
+    }
+}
+
 pub fn parse_credentials_file(
     credential_file_path: &Path,
 ) -> Result<HashMap<String, AwsCredentials>, CredentialsError> {
@@ -52,11 +74,11 @@ pub fn parse_credentials_file(
                 token,
             );
 
+            profile_name = get_profile_name_from(&unwrapped_line);
+
             access_key = None;
             secret_key = None;
             token = None;
-
-            profile_name = get_profile_name_from(&unwrapped_line);
 
             continue;
         }
