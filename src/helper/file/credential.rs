@@ -1,46 +1,12 @@
+pub mod aws_profile_credential;
+
+use crate::helper::file::credential::aws_profile_credential::AwsProfileCredential;
 use crate::helper::file::{get_profile_name_from, is_comment, is_profile};
 use rusoto_credential::{AwsCredentials, CredentialsError};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::Path;
-
-struct AwsProfileCredential {
-    pub profile_name: Option<String>,
-    pub access_key: Option<String>,
-    pub secret_key: Option<String>,
-    pub token: Option<String>,
-}
-
-impl AwsProfileCredential {
-    fn new() -> AwsProfileCredential {
-        AwsProfileCredential {
-            profile_name: None,
-            access_key: None,
-            secret_key: None,
-            token: None,
-        }
-    }
-
-    fn new_with_profile_name(profile_name: String) -> AwsProfileCredential {
-        AwsProfileCredential {
-            profile_name: Some(profile_name),
-            access_key: None,
-            secret_key: None,
-            token: None,
-        }
-    }
-
-    fn into_aws_credential(self) -> Option<AwsCredentials> {
-        if let (Some(access_key), Some(secret_key)) = (self.access_key, self.secret_key) {
-            return Some(AwsCredentials::new(
-                access_key, secret_key, self.token, None,
-            ));
-        }
-
-        None
-    }
-}
 
 pub fn parse_credentials_file(
     credential_file_path: &Path,
