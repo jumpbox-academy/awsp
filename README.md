@@ -53,7 +53,7 @@ Executable binary file will locate in `{{root}}/target/release` path. To start t
 For linux user, you can simply run following command
 
 ```bash
-ln -s /target/release/awsp ~/usr/local/bin/awsp
+ln -s $(pwd)/target/release/awsp /usr/local/bin/awsp
 ```
 
 ## Usage
